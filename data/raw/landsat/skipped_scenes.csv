@@ -1,0 +1,2 @@
+scene_id,asset,href,reason,checked
+LC08_L2SP_015033_20220804_02_T1,QA_PIXEL,https://landsateuwest.blob.core.windows.net/landsat-c2/level-2/standard/oli-tirs/2022/015/033/LC08_L2SP_015033_20220804_20220817_02_T1/LC08_L2SP_015033_20220804_20220817_02_T1_QA_PIXEL.TIF,source object not a readable GeoTIFF,2026-10-11

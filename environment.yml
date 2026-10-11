@@ -1,0 +1,34 @@
+# Analysis environment for the Baltimore LST investigation.
+# Create (from the repo root):  conda env create -p .\env -f environment.yml
+# Update after editing:         conda env update -p .\env -f environment.yml --prune
+# Activate:                     conda activate .\env
+name: baltimore-lst
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  # core geospatial stack (conda-forge builds these against one GDAL/PROJ)
+  - gdal
+  - rasterio
+  - pyproj
+  - shapely
+  - geopandas
+  # arrays and chunked raster processing
+  - numpy
+  - xarray
+  - rioxarray
+  - dask
+  # Landsat discovery and access (STAC)
+  - pystac-client
+  - planetary-computer
+  - odc-stac
+  # statistics
+  - scipy
+  - pandas
+  - statsmodels
+  - scikit-learn
+  # figures
+  - matplotlib
+  # notebooks
+  - jupyterlab
+  - ipykernel

@@ -1,0 +1,5 @@
+url=https://www.sciencebase.gov/catalog/file/get/697b9279b66b0197c3043cc3?name=Annual_NLCD_LndCov_2025_CU_C1V2.zip
+bytes=1457983950
+sha256=0e1441b5f69f505252bd62694f8136aa565f9a9c0c3f52a5e72b1bd64848a2d1
+member=Annual_NLCD_LndCov_2025_CU_C1V2.tif
+window_bounds_native_crs=(np.float64(1634655.0), np.float64(1966125.0), np.float64(1654545.0), np.float64(1986885.0))

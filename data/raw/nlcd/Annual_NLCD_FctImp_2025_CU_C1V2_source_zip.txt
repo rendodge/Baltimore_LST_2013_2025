@@ -1,0 +1,5 @@
+url=https://www.sciencebase.gov/catalog/file/get/697b907eb66b0197c3043c9f?name=Annual_NLCD_FctImp_2025_CU_C1V2.zip
+bytes=983683952
+sha256=05c4e1b0b6ae6e0425a031ee028660d2c2950901b3910eada708887bf0e7a819
+member=Annual_NLCD_FctImp_2025_CU_C1V2.tif
+window_bounds_native_crs=(np.float64(1634655.0), np.float64(1966125.0), np.float64(1654545.0), np.float64(1986885.0))

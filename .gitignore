@@ -1,0 +1,48 @@
+# Source and derived geodata, blocked by extension.
+# Small raw files (<= 25 MB) are committed deliberately with `git add -f`;
+# data/raw/MANIFEST.csv is always committed. See CLAUDE.md -> Raw data.
+*.tif
+*.TIF
+*.tiff
+*.img
+*.nc
+*.hdf
+*.jp2
+*.vrt
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.gpkg
+*.gpkg-wal
+*.gpkg-shm
+*.zip
+*.tar
+*.tar.gz
+*.aux.xml
+*.ovr
+
+# QGIS backups / locks
+*.qgs~
+*.qgz~
+*.qgd
+
+# Local conda environment (rebuild from environment.yml)
+env/
+
+# Python / editor / OS
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+cache/
+*.log
+.vscode/
+Thumbs.db
+desktop.ini
+
+# Derived data (rebuild from scripts/). Final .json sidecars are added with `git add -f`.
+data/processed/
+
+# Raw files kept local per data/raw/MANIFEST.csv (storage = local); re-download with scripts/.
+data/raw/noaa/*.csv

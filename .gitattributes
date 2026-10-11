@@ -1,0 +1,3 @@
+# Raw and reference data must stay byte-identical (SHA-256 in data/raw/MANIFEST.csv).
+data/raw/** -text
+data/vector/** -text
