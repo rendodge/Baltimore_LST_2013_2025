@@ -33,6 +33,7 @@ append-only and dated, so the history stays readable. Newest entries go at the b
 | NSA boundaries | Baltimore City Open GIS Data (shapefile provided by user, EPSG:2248) | 279 NSAs, file dated 2026-06-28 | `data/vector/Neighborhood_Statistical_Area_(NSA)_Boundaries/` |
 | NSA boundaries, UTM | Derived: `scripts/00_prepare_nsa.py` (EPSG:2248 → 32618 via NAD83 to WGS 84 (24)) | — | `data/vector/nsa_boundaries_32618.gpkg` |
 | BWI weather | NOAA ISD hourly 72406093721 (2013–2025, FM-15 METAR: air temp, wind); GHCN-Daily USW00093721 (precip) | retrieved 2026-10-11 | `data/raw/noaa/` |
+| Chesapeake Conservancy LULC | 1 m, 56-class LULC 2024 Edition, Baltimore City (ScienceBase 68011bd8d4be0263cab0ff37); ESRI:102039 (NAD83 Albers) | 2013/14, 2017/18, 2021/22 | `data/raw/cc_lulc/` |
 
 ---
 
@@ -162,6 +163,22 @@ alternatives were, and why.
 - **Caveat:** 90 m blocks are still spatially autocorrelated; regression p-values are
   optimistic. Effect sizes and class medians are the robust outputs.
 
+### 2026-10-11 — Chesapeake 1 m LULC as top-of-surface cover fractions on the Landsat grid
+- **Choice:** 8 groups from the 56 CC classes (canopy, structures, roads, other impervious,
+  turf, bare, herbaceous/shrub, water), aggregated from 1 m directly to the 30 m Landsat UTM
+  grid by area-weighted averaging (one resampling step); analysed at 90 m blocks. Tree canopy
+  over impervious/turf counts as canopy (what the thermal sensor sees). Periods 2013/14 and
+  2021/22 (closest CC periods to the 2013–2025 LST record).
+- **Change model:** LST trend ~ Δ each cover group, turf omitted as reference (fractions sum
+  to 100%), so coefficients = effect of 10 pp of that cover replacing turf. Blocks need full
+  CC coverage in both periods and < 10% water. Thinned grid (every 4th block) as a rough
+  autocorrelation check.
+- **Why:** NLCD showed warming with impervious gain but no cooling with loss; CC separates
+  roofs, pavement, canopy, turf, bare and herbaceous cover, to test what replaced the loss.
+- **Caveats:** CC change periods (8 yr) differ from the 12-yr LST trend; CC and NLCD disagree
+  on where impervious changed (r = 0.27 at 90 m); classification differences between CC
+  editions/years can create apparent change.
+
 ---
 
 ## 3. Process log
@@ -223,3 +240,30 @@ don't need an entry.
 - 90 m blocks: +0.064 °C/yr per 10 pp Δimp (r = 0.16, n = 25,429); C1/C2 similar
   (+0.066 / +0.068). Over 12 yr → +0.77 °C per 10 pp gained vs cross-sectional
   +1.40 °C per 10 pp (r = 0.89).
+
+### 2026-10-11 — Chesapeake Conservancy 1 m LULC added (display only so far)
+- `scripts/08_acquire_cc_lulc.py`: three city GeoTIFFs (2013, 2018, 2021; ~37 MB each, stored
+  unmodified, `storage = local`) + product XML → `data/raw/cc_lulc/`.
+- Display: VRTs with mode-resampled overviews in `data/processed/cc_lulc/` (raw files
+  untouched); QGIS group with a family-grouped palette from the XML class list
+  (`styles/cc_lulc_palette.qml`; not the official CC symbology). ESRI:102039 → EPSG:32618 set
+  to NAD83 to WGS 84 (24) in the project, as for the NSAs.
+- Project CRS had been switched to EPSG:2248; reset to EPSG:32618.
+- Not yet used in any analysis. Periods (2013/14, 2017/18, 2021/22) differ from the NLCD
+  endpoints (2013, 2025).
+
+### 2026-10-11 — CC cover fractions and cover-change vs LST run (exploratory)
+- `scripts/09_cc_fractions.py` → `data/processed/cc_lulc/cc_frac_<group>_<year>_utm.tif`;
+  groups sum to 100% in fully covered cells. Means 2013/14 → 2021/22 over the 25,013 blocks
+  used (< 10% water): canopy 28.6 → 28.2%, impervious (structures+roads+other) 49.5 → 50.4%.
+- `scripts/10_cc_change_lst.py` → `cc_change_regression.csv`, `cc_change_replacement.csv`,
+  `cc_change_summary.json`, Δ canopy / Δ impervious rasters, preview PNG. 25,013 blocks.
+- Cross-section (mean relative LST, r² = 0.79), °C per 10 pp replacing turf: structures
+  +1.03, roads +0.76, other impervious +0.68, bare +0.38, herbaceous +0.01 (ns), canopy −0.51.
+- Change (relative trend B, r² = 0.05), °C/yr per 10 pp replacing turf: structures +0.055
+  (thinned +0.049, p < 1e-6), other impervious +0.031 (thinned +0.035, p < 1e-4), canopy
+  −0.014 (thinned −0.005, ns), bare +0.013 (thinned p = 0.08), roads and herbaceous ns.
+  C2 gives the same pattern.
+- Impervious loss ≥ 5 pp by dominant replacement (median B trend; stable −0.030):
+  → herbaceous/shrub −0.078 (n = 182), → canopy −0.044 (n = 54), → turf −0.025 (n = 164),
+  → bare +0.027 (n = 72). Gains: from canopy +0.020, turf +0.023, herbaceous +0.071, bare +0.063.
