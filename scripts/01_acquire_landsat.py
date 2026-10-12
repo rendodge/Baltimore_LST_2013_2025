@@ -1,20 +1,22 @@
 """Acquire Landsat C2 L2 surface-temperature subsets over Baltimore City.
 
 Source: Microsoft Planetary Computer STAC, collection `landsat-c2-l2` (USGS Collection 2
-Level-2, mirrored unmodified). Filter: Landsat 8, WRS-2 path 15 / row 33, Tier 1, L2SP,
-July-August, 2013-2025.
+Level-2, mirrored unmodified). Filter: Landsat 8 (default) or Landsat 9, WRS-2 path 15 /
+row 33, Tier 1, L2SP, July-August, 2013-2025 (Landsat 9 data begin late 2021).
 
 For each scene, the native-grid window covering the NSA boundaries (+450 m) is copied from
 the source COGs with values, dtype, no-data, and grid unchanged (no resampling):
 ST_B10 (`lwir11`), QA_PIXEL, ST_QA (`qa`). The full MTL.txt and the STAC item JSON are
 also saved. Every file is appended to data/raw/MANIFEST.csv.
 
-Run: conda run -p .\\env python scripts\\01_acquire_landsat.py
+Run: conda run -p .\\env python scripts\\01_acquire_landsat.py [landsat-8|landsat-9]
+Manifest rows and skipped-scene entries for the other platform are kept.
 """
 import csv
 import hashlib
 import json
 import shutil
+import sys
 import time
 from datetime import date
 from pathlib import Path
@@ -60,7 +62,7 @@ def copy_window(href, dst, bounds):
     tmp.replace(dst)
 
 
-def main():
+def main(platform="landsat-8"):
     nsa = gpd.read_file(NSA).to_crs(32618)
     xmin, ymin, xmax, ymax = nsa.total_bounds
     # Snap outward to the Landsat grid (pixel edges at 15 m mod 30 m).
@@ -71,13 +73,13 @@ def main():
     print("subset bounds (EPSG:32618):", bounds)
 
     cat = pystac_client.Client.open(STAC)  # sign per scene below; SAS tokens expire
-    query = {"platform": {"eq": "landsat-8"}, "landsat:wrs_path": {"eq": "015"},
+    query = {"platform": {"eq": platform}, "landsat:wrs_path": {"eq": "015"},
              "landsat:wrs_row": {"eq": "033"}, "landsat:collection_category": {"eq": "T1"}}
     items = [it for it in cat.search(collections=["landsat-c2-l2"], bbox=bbox_ll,
                                      datetime="2013-07-01/2025-08-31", query=query).items()
              if it.datetime.month in (7, 8) and "_L2SP_" in it.id]
     items.sort(key=lambda it: it.datetime)
-    print(f"{len(items)} scenes")
+    print(f"{platform}: {len(items)} scenes")
 
     rows, skipped = [], []
     for it in items:
@@ -131,18 +133,25 @@ def main():
     with open(MANIFEST, newline="") as f:
         reader = csv.DictReader(f)
         fields = reader.fieldnames
-        keep = [r for r in reader if not r["path"].startswith("data/raw/landsat/")]
+        done = {r["path"] for r in rows}
+        prefix = "data/raw/landsat/LC0" + platform[-1]
+        keep = [r for r in reader if r["path"] not in done
+                and not (r["path"].startswith(prefix) and r["path"].split("/")[3] in {s["scene_id"] for s in skipped})]
     with open(MANIFEST, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
         w.writerows(keep + rows)
     print(f"manifest: {len(rows)} landsat rows")
-    with open(OUT / "skipped_scenes.csv", "w", newline="") as f:
+    sk_path = OUT / "skipped_scenes.csv"
+    old = list(csv.DictReader(open(sk_path, newline=""))) if sk_path.exists() else []
+    ids = {s["scene_id"] for s in skipped}
+    old = [r for r in old if r["scene_id"] not in ids and not r["scene_id"].startswith("LC0" + platform[-1])]
+    with open(sk_path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["scene_id", "asset", "href", "reason", "checked"])
         w.writeheader()
-        w.writerows(skipped)
+        w.writerows(old + skipped)
     print(f"skipped {len(skipped)} scenes")
 
 
 if __name__ == "__main__":
-    main()
+    main(*sys.argv[1:2])

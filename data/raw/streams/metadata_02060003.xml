@@ -1,0 +1,753 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<metadata>
+  <idinfo>
+    <citation>
+      <citeinfo>
+        <origin>Matthew Baker</origin>
+        <origin>David Saavedra</origin>
+        <origin>Xuezhi Cang</origin>
+        <origin>Labeeb Ahmed</origin>
+        <pubdate>20250523</pubdate>
+        <title>Hydrographic Datasets for Hydrologic Unit 02060003 - Gunpowder-Patapsco</title>
+        <geoform>vector and raster digital datasets</geoform>
+        <onlink>https://doi.org/10.5066/P1GRAPEX</onlink>
+      </citeinfo>
+    </citation>
+    <descript>
+      <abstract>The Chesapeake Bay Hyper-Resolution Hydrography Database is intended to facilitate analysis of the landscape in the Chesapeake Bay watershed through identification of headwater and other low-order streams or drainage features (e.g. ditches) that, to date, may be absent from existing hydrography data products. A full description of the methodology and accuracy assessment is provided in the accompanying report titled: "Hydrography Mapping Supporting Modeling and Targeted Conservation: Project Overview and Lessons Learned". The data products were developed by the Chesapeake Conservancy and the University of Maryland Baltimore County (UMBC) as part of a 6-year Cooperative Agreement between the Chesapeake Conservancy and the U.S. Environmental Protection Agency (EPA) and a separate Interagency Agreement between the USGS and the EPA to provide geospatial support to the Chesapeake Bay Program Office.
+
+The data release is structured by eight-digit level hydrologic unit codes (HUC8) for the Chesapeake Bay watershed. Each HUC8 contains seven files (see below) and uses the following nomenclature: where HUC_ID and WATERSHED_NAME are placeholders for HUC8 ID(s), and local watershed name(s) (e.g., "Hydrographic Datasets for Hydrologic Unit 02050101 - Upper Susquehanna")
+
+Data Release Structure:
+Project Overview and Lessons Learned.pdf (Project overivew, methodology and accuracy assessment)
+huc_[HUC_ID]_streamLine.zip (Stream Lines)
+huc_[HUC_ID]_streamPoly.zip (Stream Polygons)
+huc_[HUC_ID]_agDitches.zip (Agricultural Ditches)
+huc_[HUC_ID]_rdDitches.zip (Road Ditches)
+huc_[HUC_ID]_geomorphon1m.tif (Geomorphon 1-meter)
+huc_[HUC_ID]_geomorphon10m.tif (Geomorphon 10-meter)
+metadata_[HUC_ID].xml (metadata xml)</abstract>
+      <purpose>The Chesapeake Bay Hyper-Resolution Hydrography Datasetatabase is intended to facilitate analysis of the landscape in the Chesapeake Bay watershed through identification of headwater and other low-order streams or drainage features (e.g. ditches) that, to date, may be absent from existing hydrography data products.
+
+The Stream Line dataset is a polyline network connecting stream channels as identified from 1-m LiDAR-derived digital elevation models (DEMs). LiDAR quality and vintage varies across the Chesapeake Bay watershed and every effort was made to use the highest quality or most current elevation data available. Stream channels were identified from DEMs using a novel approach developed by the UMBC and the Chesapeake Conservancy that utilizes a multi-scalar computer vision algorithm to locate convergent terrain indicative of stream valleys and to further identify local depressions within or connected to valleys, indicative of stream channels. Additional steps were taken to remove non-fluvial features from the set of channel-like depressions and to isolate the remaining fluvial features that could be considered stream channels. Stream channels as visible in LiDAR DEMs may appear discontinuous in areas where they are crossed by culverts or bridges, in areas where streams are routed underground via pipes, in areas of dense vegetation where LiDAR cannot penetrate effectively, or in areas where the channels are naturally less defined or flow underground (e.g. karst topography). In these instances, the stream polylines contained in this dataset connect portions of visible stream channel following the surface topography as represented in the DEM. These portions of polyline segments that connect stream channels but do not directly overlap visible channels are considered "connectors" and their proportion is indicated in the attributes of each polyline. Some channel polygons were deliberately omitted from the polyline connection process (e.g. numerous small polygons corresponding to braided or remnant channels on floodplains, polygons that would generate an unrealistically short stream line, etc.) in an effort to generate a less cluttered polyline network. As a result, there may not always be a direct one-to-one match between stream polygons and stream centerlines.
+
+The Stream Polygon dataset is a two-dimensional polygon representation of stream channels as identified from 1-m LiDAR-derived digital elevation models (DEMs). LiDAR quality and vintage varies across the Chesapeake Bay watershed and every effort was made to use the highest quality or most current elevation data available. Stream channels were identified from DEMs using a novel approach developed by UMBC and Chesapeake Conservancy that utilizes a multi-scalar computer vision algorithm to locate convergent terrain indicative of stream valleys and to further identify local depressions within or connected to valleys, indicative of stream channels. Additional steps were taken to remove non-fluvial features from the set of channel-like depressions and to isolate the remaining fluvial features that could be considered stream channels. Stream channels as visible in LiDAR DEMs may appear discontinuous in areas where they are crossed by culverts or bridges, in areas where streams are routed underground via pipes, in areas of dense vegetation where LiDAR cannot penetrate effectively, or in areas where the channels are naturally less defined or flow underground (e.g. karst topography). In these instances, gaps will be present along the polygon stream channel network corresponding with the locations where a visible stream channel could not be perceived from the DEM.
+
+The Agricultural Ditches dataset is a two-dimensional polygon representation of agricultural ditches as identified from 1-m LiDAR-derived digital elevation models (DEMs). LiDAR quality and vintage varies across the Chesapeake Bay watershed and every effort was made to use the highest quality or most current elevation data available. Agricultural ditches were identified from DEMs using a novel approach developed by UMBC and Chesapeake Conservancy that utilizes a multi-scalar computer vision algorithm to identify locally convergent areas of terrain indicative of water conveyance features, including ditches. A supervised machine learning classification was applied to these features taking into account their physical characteristics (e.g. shape, size, uniformity) and their context within the landscape (e.g. surrounded by open fields) to identify the features most likely to be agricultural ditches.
+
+The Road Ditches dataset is a two-dimensional polygon representation of roadside ditches as identified from 1-m LiDAR-derived digital elevation models (DEMs). LiDAR quality and vintage varies across the Chesapeake Bay watershed and every effort was made to use the highest quality or most current elevation data available. Roadside ditches were identified from DEMs using a novel approach developed by UMBC and Chesapeake Conservancy that utilizes a multi-scalar computer vision algorithm to identify locally convergent areas of terrain indicative of water conveyance features, including ditches. A supervised machine learning classification was applied to these features taking into account their physical characteristics (e.g. shape, size, uniformity) and their context within the landscape (e.g. parallel to roads) to identify the features most likely to be roadside ditches.
+
+The geomorphon dataset is a raster representation of landforms interpreted from LiDAR-derived digital elevation models (DEMs) at a broad scale. The LiDAR quality and vintage varies across the Chesapeake Bay watershed and every effort was made to use the highest quality or most current elevation data available.
+
+To interpret 1-m geomorphon landforms at a local scale, 1-m LiDAR DEMs were denoised with an edge-preserving denoising algorithm (Sun et al. 2007) to enhance feature contiguity while reducing noise, then used as input to the geomorphon algorithm (Jasiewicz &amp; Stepinski 2013). The geomorphon algorithm was configured with a 20-meter search radius and no skip radius to provide a localized interpretation of the terrain. This dataset is suitable for identifying stream channels, ditches, and other local-scale landform features. 
+
+To interpret 10-m geomorphon landforms at a broad scale, 1-m LiDAR DEMs were denoised with an edge-preserving denoising algorithm (Sun et al. 2007) to enhance feature contiguity while reducing noise, then aggregated to 10-meter resolution and used as input to the geomorphon algorithm (Jasiewicz &amp; Stepinski 2013). The geomorphon algorithm was configured with a 1000-meter search radius and a 20-meter skip radius to ignore local terrain and provide a broad interpretation of the terrain. This dataset is suitable for identifying stream valleys and other broad-scale landform features. 
+
+Pixel values for 1-m and 10-m geomorphon landforms, and their corresponding landform type are as follows: 
+1 – flat
+2 – peak
+3 – ridge
+4 – shoulder
+5 – spur
+6 – slope
+7 – hollow
+8 – footslope 
+9 – valley 
+10 – pit</purpose>
+    </descript>
+    <timeperd>
+      <timeinfo>
+        <rngdates>
+          <begdate>2008</begdate>
+          <enddate>2024</enddate>
+        </rngdates>
+      </timeinfo>
+      <current>ground condition</current>
+    </timeperd>
+    <status>
+      <progress>Complete</progress>
+      <update>None planned</update>
+    </status>
+    <spdom>
+      <descgeog>
+      </descgeog>
+      <bounding>
+        <westbc>-77.20994295491712</westbc>
+        <eastbc>-76.05565851011204</eastbc>
+        <northbc>39.7945153217902</northbc>
+        <southbc>39.04855051563376</southbc>
+      </bounding>
+    </spdom>
+    <keywords>
+      <theme>
+        <themekt>ISO 19115 Topic Category</themekt>
+        <themekey>imageryBaseMapsEarthCover</themekey>
+      </theme>
+      <theme>
+        <themekt>USGS Thesaurus</themekt>
+        <themekey>river systems</themekey>
+        <themekey>river reaches</themekey>
+        <themekey>hydrology</themekey>
+        <themekey>land surface characteristics</themekey>
+      </theme>
+      <theme>
+        <themekt>USGS Metadata Identifier</themekt>
+        <themekey>USGS:679cfd13d34e89501cd2d6ed</themekey>
+      </theme>
+      <place>
+        <placekt>Common geographic areas</placekt>
+        <placekey>Maryland</placekey>
+        <placekey>Pennsylvania</placekey>
+        <placekey>02060003</placekey>
+        <placekey>Gunpowder-Patapsco</placekey>
+        <placekey>Chesapeake Bay Watershed</placekey>
+      </place>
+    </keywords>
+    <accconst>The data is intended to facilitate analysis of the landscape in the Chesapeake Bay watershed through identification of headwater and other low-order streams or conveyance features (e.g. ditches) that, to date, may be absent from existing hydrography databases. The organizations responsible for generating and funding this database make no representations of any kind including, but not limited to the warranties of merchantability or fitness for a particular use, nor are any such warranties to be implied with respect to the data. Although every effort has been made to ensure the accuracy of information, errors may be reflected in data supplied. The user must be aware of data conditions and bear responsibility for the appropriate use of the information with respect to possible errors, original map scale, collection methodology, currency of data, and other conditions. Credit should always be given to the data source when this data is transferred, altered, or used for analysis.</accconst>
+    <useconst>None. Users are advised to read the metadata and provided documentation thoroughly to understand appropriate use and data limitations.</useconst>
+    <ptcontac>
+      <cntinfo>
+        <cntorgp>
+          <cntorg>Chesapeake Conservancy</cntorg>
+        </cntorgp>
+        <cntaddr>
+          <addrtype>mailing</addrtype>
+          <address>1212 West Street</address>
+          <city>Annapolis</city>
+          <state>MD</state>
+          <postal>21401</postal>
+          <country>United States</country>
+        </cntaddr>
+        <cntvoice>(443) 321-3610</cntvoice>
+        <cntemail>cic@chesapeakeconservancy.org</cntemail>
+      </cntinfo>
+    </ptcontac>
+    <datacred>Funding provided by the U.S. Environmental Protection Agency Chesapeake Bay Program. Cooperative participants: University of Maryland Baltimore County, Chesapeake Conservancy &amp; U.S. Geological Survey.</datacred>
+  </idinfo>
+  <dataqual>
+    <attracc>
+      <attraccr>Stream centerlines were assessed for accuracy based on their longitudinal extent and lateral positioning relative to visible stream channels in the LiDAR DEM. A full description of the accuracy assessment is provided in the accompanying report titled "Hydrography Mapping Supporting Modeling and Targeted Conservation: Project Overview and Lessons Learned".
+
+No formal accuracy tests were conducted on the following data: stream polygons, agricultural ditch polygons, roadside ditch polygons and geomorphon rasters.</attraccr>
+    </attracc>
+    <logic>No formal logical accuracy tests were conducted.</logic>
+    <complete>Dataset is considered complete for the information presented, as described in the abstract. Users are advised to read the rest of the metadata record carefully for additional details.</complete>
+    <lineage>
+      <procstep>
+        <procdesc>Stream Lines process steps:
+
+1. 1-m LiDAR DEMs were denoised to improve feature detection (Sun et. al 2007).
+2. 1-m denoised DEMs were used to produce 1-m geomorphon landform maps (Jasiewicz and Stepinski 2013) and the same DEMs were resampled to 10-m to produce 10-m geormorphon maps.
+3. A "valley network" was extracted from the 10-m geomorphon map consisting of groups of pit and valley geomorphons that met continuity criteria.
+4. Channel-like features were extracted from the 1-m geomorphons consisting of pit and valley geomorphons that were within or contiguous with the 10-m valley network.
+5. Channel-like features were processed by a random forest model and assigned probabilities that the feature belonged to classes such as "stream", "ditch", "gully", and others. A "skeleton" of channel-like polygons meeting criteria for inclusion in the stream network were extracted and used to derive stream centerlines.
+6. Stream centerlines were derived from a disconnected "skeleton" of channel-like polygons. To connect discontinuous channel polygons, centerlines were traced along the least cost path following the terrain. Where terrain was significantly convex and not conducive to least cost path tracing (i.e. bridges, culverts, dams) terrain was modified in an automated process to create a path for connecting the upslope channel polygon to the downslope channel polygon on either side of the convex terrain. 
+7. Connected centerline networks were generated at the HUC12 level. Individual HUC12 networks were joined together to form a complete network at the HUC8 level and stream order attribution (Strahler order and Shreve magnitude) were computed on the HUC8 network. Additional attribution was summarized at the reach level.</procdesc>
+        <procdate>2024</procdate>
+      </procstep>
+      <procstep>
+        <procdesc>Stream Polygons process steps:
+
+1. 1-m LiDAR DEMs were denoised to improve feature detection (Sun et. al 2007).
+2. 1-m denoised DEMs were used to produce 1-m geomorphon landform maps (Jasiewicz and Stepinski 2013) and the same DEMs were resampled to 10-m to produce 10-m geormorphon maps. 
+3. A "valley network" was extracted from the 10-m geomorphon map consisting of groups of pit and valley geomorphons that met continuity criteria.
+4. Channel-like features were extracted from the 1-m geomorphons consisting of pit and valley geomorphons that were within or contiguous with the 10-m valley network.
+5. Channel-like features were processed by a random forest model and assigned probabilities that the feature belonged to classes such as "stream", "ditch", "gully", and others. A "skeleton" of channel-like polygons meeting the criteria for inclusion in the stream network were extracted and presented in this dataset.</procdesc>
+        <procdate>2024</procdate>
+      </procstep>
+      <procstep>
+        <procdesc>Road Ditches process steps:
+
+1. 1-m LiDAR DEMs were denoised to improve feature detection (Sun et. al 2007).
+2. 1-m denoised DEMs were used to produce 1-m geomorphon landform maps (Jasiewicz and Stepinski 2013) and the same DEMs were resampled to 10-m to produce 10-m geormorphon maps.
+3. A "valley network" was extracted from the 10-m geomorphon map consisting of groups of pit and valley geomorphons that met continuity criteria.
+4. Channel-like features were extracted from the 1-m geomorphons consisting of pit and valley geomorphons that were within or contiguous with the 10-m valley network.
+5. Channel-like feature polygons were processed by a random forest model that was specifically developed to identify roadside ditches based on manually-interpreted training data. Polygons that were classified as roadside ditches by the model are presented in this dataset.</procdesc>
+        <procdate>2024</procdate>
+      </procstep>
+      <procstep>
+        <procdesc>Agricultural Ditches process steps:
+
+1. 1-m LiDAR DEMs were denoised to improve feature detection (Sun et. al 2007).
+2. 1-m denoised DEMs were used to produce 1-m geomorphon landform maps (Jasiewicz and Stepinski 2013) and the same DEMs were resampled to 10-m to produce 10-m geormorphon maps.
+3. A "valley network" was extracted from the 10-m geomorphon map consisting of groups of pit and valley geomorphons that met continuity criteria.
+4. Channel-like features were extracted from the 1-m geomorphons consisting of pit and valley geomorphons that were within or contiguous with the 10-m valley network.
+5. Channel-like feature polygons were processed by a random forest model that was specifically developed to identify agricultural ditches based on manually-interpreted training data. Polygons that were classified as agricultural ditches by the model are presented in this dataset.</procdesc>
+        <procdate>2024</procdate>
+      </procstep>
+      <procstep>
+        <procdesc>Geomorphon 1m process steps:
+
+1. 1-m LiDAR DEMs were denoised to improve feature detection (Sun et. al 2007).
+2. 1-m denoised DEMs were supplied to the r.geomorphon tool in GRASS GIS. To interpret landforms at a local scale using 1-m DEMs, a search radius of 20-m, a skip radius of 0-m, and a flatness threshold of 1 degree were used in the r.geomorphon tool.</procdesc>
+        <procdate>2024</procdate>
+      </procstep>
+      <procstep>
+        <procdesc>Geomorphon 10m process steps:
+
+1. 1-m LiDAR DEMs were denoised to improve feature detection (Sun et. al 2007).
+2. 1-m denoised LiDAR DEMs were coarsened to 10-m resolution.
+3. 10-m DEMs were supplied to the r.geomorphon tool in GRASS GIS. To interpret landforms at a broad scale using 10-m DEMs, a search radius of 1000-m, a skip radius of 20-m, and a flatness threshold of 0.1 degree were used in the r.geomorphon tool.</procdesc>
+        <procdate>2024</procdate>
+      </procstep>
+    </lineage>
+  </dataqual>
+  <spref>
+    <horizsys>
+      <planar>
+        <mapproj>
+          <mapprojn>USA Contiguous Albers Conical Equal Area (USGS)</mapprojn>
+          <albers>
+            <stdparll>29.5</stdparll>
+            <stdparll>45.5</stdparll>
+            <longcm>-96.0</longcm>
+            <latprjo>23.0</latprjo>
+            <feast>0.0</feast>
+            <fnorth>0.0</fnorth>
+          </albers>
+        </mapproj>
+        <planci>
+          <plance>coordinate pair</plance>
+          <coordrep>
+            <absres>1</absres>
+            <ordres>1</ordres>
+          </coordrep>
+          <plandu>meters</plandu>
+        </planci>
+      </planar>
+      <geodetic>
+        <horizdn>North American Datum of 1983 (NAD 83)</horizdn>
+        <ellips>Geodetic Reference System 1980</ellips>
+        <semiaxis>6378137.000000</semiaxis>
+        <denflat>298.257222</denflat>
+      </geodetic>
+    </horizsys>
+  </spref>
+  <eainfo>
+    <detailed>
+      <enttyp>
+        <enttypl>_streamLine.shp</enttypl>
+        <enttypd>Table containing attribute information associated with the data set.</enttypd>
+        <enttypds>Producer defined</enttypds>
+      </enttyp>
+      <attr>
+        <attrlabl>FID</attrlabl>
+        <attrdef>Internal feature number.</attrdef>
+        <attrdefs>ESRI</attrdefs>
+        <attrdomv>
+          <udom>Sequential unique whole numbers that are automatically generated.</udom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>Shape</attrlabl>
+        <attrdef>Feature geometry.</attrdef>
+        <attrdefs>ESRI</attrdefs>
+        <attrdomv>
+          <udom>Shape type.</udom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>bkhtAvg</attrlabl>
+        <attrdef>Average bank height of reach. Bank height is calculated as elevation of channel bed relative to top of banks. Because channel bed is below top of banks, values are negative. Larger negative numbers indicate deeper channel/higher banks.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>-62.4117287874943</rdommin>
+            <rdommax>0.0</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>bkhtMax</attrlabl>
+        <attrdef>Maximum bank height of reach. Bank height is calculated as elevation of channel bed relative to top of banks. Because channel bed is below top of banks, values are negative. Larger negative numbers indicate deeper channel/higher banks.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>-56.4850044250488</rdommin>
+            <rdommax>5.57655048370361</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>bkhtMed</attrlabl>
+        <attrdef>Median bank height of reach, Bank height is calculated as elevation of channel bed relative to top of banks. Because channel bed is below top of banks, values are negative. Larger negative numbers indicate deeper channel/higher banks.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>-65.4968</rdommin>
+            <rdommax>0.0</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>bkhtMin</attrlabl>
+        <attrdef>Minimum bank height of reach. Bank height is calculated as elevation of channel bed relative to top of banks. Because channel bed is below top of banks, values are negative. Larger negative numbers indicate deeper channel/higher banks.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>-110.960830688477</rdommin>
+            <rdommax>0.0</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>bkhtPct25</attrlabl>
+        <attrdef>25th percentile of bank height along reach. Bank height is calculated as elevation of channel bed relative to top of banks. Because channel bed is below top of banks, values are negative. Larger negative numbers indicate deeper channel/higher banks.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>-70.2502</rdommin>
+            <rdommax>0.0</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>bkhtPct75</attrlabl>
+        <attrdef>75th percentile of bank height along reach. Bank height is calculated as elevation of channel bed relative to top of banks. Because channel bed is below top of banks, values are negative. Larger negative numbers indicate deeper channel/higher banks.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>-63.4592</rdommin>
+            <rdommax>0.0</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>bkhtRange</attrlabl>
+        <attrdef>Range of bank height along reach. Bank height is calculated as elevation of channel bed relative to top of banks. Because channel bed is below top of banks, values are negative. Larger negative numbers indicate deeper channel/higher banks.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>0.0</rdommin>
+            <rdommax>109.680834054947</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>bkhtSd</attrlabl>
+        <attrdef>Standard deviation of bank height along reach. Bank height is calculated as elevation of channel bed relative to top of banks. Because channel bed is below top of banks, values are negative. Larger negative numbers indicate deeper channel/higher banks.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>0.0</rdommin>
+            <rdommax>23.7615639331102</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>wdAvg</attrlabl>
+        <attrdef>Average channel width of reach</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>2.0</rdommin>
+            <rdommax>3356.95813989097</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>wdMax</attrlabl>
+        <attrdef>Maximum channel width of reach</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>2.0</rdommin>
+            <rdommax>3592.69970703125</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>wdMed</attrlabl>
+        <attrdef>Median channel width of reach</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>2.0</rdommin>
+            <rdommax>3398.95</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>wdMin</attrlabl>
+        <attrdef>Minimum channel width of reach</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>2.0</rdommin>
+            <rdommax>2169.94018554688</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>wdPct25</attrlabl>
+        <attrdef>25th percentile of channel width along reach</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>2.0</rdommin>
+            <rdommax>3205.43</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>wdPct75</attrlabl>
+        <attrdef>75th percentile of channel width along reach</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>2.0</rdommin>
+            <rdommax>3534.09</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>wdRange</attrlabl>
+        <attrdef>Range of channel width along reach</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>0.0</rdommin>
+            <rdommax>3321.6630859375</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>wdSd</attrlabl>
+        <attrdef>Standard deviation of channel width along reach</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>0.0</rdommin>
+            <rdommax>1033.2427432767</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>elevAvg</attrlabl>
+        <attrdef>Average elevation of reach, measured along the centerline</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>-0.532037276936614</rdommin>
+            <rdommax>304.9129295936</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>elevMax</attrlabl>
+        <attrdef>Maximum elevation of reach, measured along the centerline</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>-0.522714972496033</rdommin>
+            <rdommax>314.902618408203</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>elevMed</attrlabl>
+        <attrdef>Median elevation of reach, measured along the centerline</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>-0.551073</rdommin>
+            <rdommax>304.855</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>elevMin</attrlabl>
+        <attrdef>Minimum elevation of reach, measured along the centerline</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>-0.68428498506546</rdommin>
+            <rdommax>304.319396972656</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>elevRange</attrlabl>
+        <attrdef>Range of elevation along reach, measured along the centerline</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>0.0</rdommin>
+            <rdommax>115.019409179688</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>elevSd</attrlabl>
+        <attrdef>Standard deviation of elevation along reach, measured along the centerline</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>0.0</rdommin>
+            <rdommax>23.872074613486</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>cnctR</attrlabl>
+        <attrdef>Connector ratio - Proportion of reach that is a connector (i.e. does not directly overlap a channel polygon). Designation of a reach or portion thereof as "connector" does NOT necessarily mean that line segment represents a non-stream feature. In many cases, connectors DO follow real stream channels but the underlying channel polygons were either not detected or filtered out, resulting in a "connector" designation on the polyline.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>0.0</rdommin>
+            <rdommax>1.0</rdommax>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>othCnctR</attrlabl>
+        <attrdef>Proportion of the reach that is a connector overlapping "other" land use (e.g. bare ground, vegetation). Designation of a reach or portion thereof as "connector" does NOT necessarily mean that line segment represents a non-stream feature. In many cases, connectors DO follow real stream channels but the underlying channel polygons were either not detected or filtered out, resulting in a "connector" designation on the polyline.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>-0.013627918450393</rdommin>
+            <rdommax>1.0</rdommax>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>rdCnctR</attrlabl>
+        <attrdef>Proportion of the reach that is a connector overlapping road surface. Designation of a reach or portion thereof as "connector" does NOT necessarily mean that line segment represents a non-stream feature. In many cases, connectors DO follow real stream channels but the underlying channel polygons were either not detected or filtered out, resulting in a "connector" designation on the polyline.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>0.0</rdommin>
+            <rdommax>1.0</rdommax>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>wtrCnctR</attrlabl>
+        <attrdef>Proportion of the reach that is a connector overlapping open water (e.g. reservoir, wide river). Designation of a reach or portion thereof as "connector" does NOT necessarily mean that line segment represents a non-stream feature. In many cases, connectors DO follow real stream channels but the underlying channel polygons were either not detected or filtered out, resulting in a "connector" designation on the polyline.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>0.0</rdommin>
+            <rdommax>1.00000000000188</rdommax>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>strOrder</attrlabl>
+        <attrdef>Strahler stream order</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>1</rdommin>
+            <rdommax>8</rdommax>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>linkNum</attrlabl>
+        <attrdef>Number of links upstream of current reach (i.e. Shreve magnitude)</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>1</rdommin>
+            <rdommax>10146</rdommax>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>dlinkNum</attrlabl>
+        <attrdef>Link number of the reach immediately downstream of current reach</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>2</rdommin>
+            <rdommax>10146</rdommax>
+          </rdom>
+        </attrdomv>
+      </attr>
+      <attr>
+        <attrlabl>length</attrlabl>
+        <attrdef>Length of reach</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <rdom>
+            <rdommin>0.707106781186548</rdommin>
+            <rdommax>23338.29428542389</rdommax>
+            <attrunit>meter</attrunit>
+          </rdom>
+        </attrdomv>
+      </attr>
+    </detailed>
+    <detailed>
+      <enttyp>
+        <enttypl>_geomorphon1m.tif &amp;  _geomorphon10m.tif</enttypl>
+        <enttypd>Raster geospatial data file.</enttypd>
+        <enttypds>Producer defined</enttypds>
+      </enttyp>
+      <attr>
+        <attrlabl>Value</attrlabl>
+        <attrdef>Unique numeric values contained in each raster cell.</attrdef>
+        <attrdefs>Producer defined</attrdefs>
+        <attrdomv>
+          <edom>
+            <edomv>1.0</edomv>
+            <edomvd>Flat</edomvd>
+            <edomvds>Producer defined</edomvds>
+          </edom>
+        </attrdomv>
+        <attrdomv>
+          <edom>
+            <edomv>2.0</edomv>
+            <edomvd>Peak</edomvd>
+            <edomvds>Producer defined</edomvds>
+          </edom>
+        </attrdomv>
+        <attrdomv>
+          <edom>
+            <edomv>3.0</edomv>
+            <edomvd>Ridge</edomvd>
+            <edomvds>Producer defined</edomvds>
+          </edom>
+        </attrdomv>
+        <attrdomv>
+          <edom>
+            <edomv>4.0</edomv>
+            <edomvd>Shoulder</edomvd>
+            <edomvds>Producer defined</edomvds>
+          </edom>
+        </attrdomv>
+        <attrdomv>
+          <edom>
+            <edomv>5.0</edomv>
+            <edomvd>Spur</edomvd>
+            <edomvds>Producer defined</edomvds>
+          </edom>
+        </attrdomv>
+        <attrdomv>
+          <edom>
+            <edomv>6.0</edomv>
+            <edomvd>Slope</edomvd>
+            <edomvds>Producer defined</edomvds>
+          </edom>
+        </attrdomv>
+        <attrdomv>
+          <edom>
+            <edomv>7.0</edomv>
+            <edomvd>Hollow</edomvd>
+            <edomvds>Producer defined</edomvds>
+          </edom>
+        </attrdomv>
+        <attrdomv>
+          <edom>
+            <edomv>8.0</edomv>
+            <edomvd>Footslope</edomvd>
+            <edomvds>Producer defined</edomvds>
+          </edom>
+        </attrdomv>
+        <attrdomv>
+          <edom>
+            <edomv>9.0</edomv>
+            <edomvd>Valley</edomvd>
+            <edomvds>Producer defined</edomvds>
+          </edom>
+        </attrdomv>
+        <attrdomv>
+          <edom>
+            <edomv>10.0</edomv>
+            <edomvd>Pit</edomvd>
+            <edomvds>Producer defined</edomvds>
+          </edom>
+        </attrdomv>
+      </attr>
+    </detailed>
+    <overview>
+      <eaover>The *_agDitches.shp, *_rdDitches.shp, and *_streamPoly.shp files have only one attribute i.e., FID. The FID attribute is recorded and documented as part of *_streamLines.shp, where the FIDs are sequential unique  whole numbers that are automatically generated uniquely for each dataset.
+
+The 1-m and 10-m geomorphon datasets share same unique values for both datasets, but at different resolutions.</eaover>
+      <eadetcit>
+      </eadetcit>
+    </overview>
+  </eainfo>
+  <distinfo>
+    <distrib>
+      <cntinfo>
+        <cntperp>
+          <cntper>GS ScienceBase</cntper>
+          <cntorg>U.S. Geological Survey</cntorg>
+        </cntperp>
+        <cntaddr>
+          <addrtype>mailing address</addrtype>
+          <address>Denver Federal Center, Building 810, Mail Stop 302</address>
+          <city>Denver</city>
+          <state>CO</state>
+          <postal>80225</postal>
+          <country>United States</country>
+        </cntaddr>
+        <cntvoice>1-888-275-8747</cntvoice>
+        <cntemail>sciencebase@usgs.gov</cntemail>
+      </cntinfo>
+    </distrib>
+    <distliab>Unless otherwise stated, all data, metadata and related materials are considered to satisfy the quality standards relative to the purpose for which the data were collected. Although these data and associated metadata have been reviewed for accuracy and completeness and approved for release by the U.S. Geological Survey (USGS), no warranty expressed or implied is made regarding the display or utility of the data for other purposes, nor on all computer systems, nor shall the act of distribution constitute any such warranty.</distliab>
+    <stdorder>
+      <digform>
+        <digtinfo>
+          <formname>Digital Data</formname>
+        </digtinfo>
+        <digtopt>
+          <onlinopt>
+            <computer>
+              <networka>
+                <networkr>https://doi.org/10.5066/P1GRAPEX</networkr>
+              </networka>
+            </computer>
+          </onlinopt>
+        </digtopt>
+      </digform>
+      <fees>None</fees>
+    </stdorder>
+  </distinfo>
+  <metainfo>
+    <metd>20250523</metd>
+    <metc>
+      <cntinfo>
+        <cntorgp>
+          <cntorg>Chesapeake Conservancy</cntorg>
+        </cntorgp>
+        <cntaddr>
+          <addrtype>mailing</addrtype>
+          <address>1212 West Street</address>
+          <city>Annapolis</city>
+          <state>MD</state>
+          <postal>21401</postal>
+          <country>United States</country>
+        </cntaddr>
+        <cntvoice>(443) 321-3610</cntvoice>
+        <cntemail>cic@chesapeakeconservancy.org</cntemail>
+      </cntinfo>
+    </metc>
+    <metstdn>FGDC Biological Data Profile of the Content Standard for Digital Geospatial Metadata</metstdn>
+    <metstdv>FGDC-STD-001.1-1999</metstdv>
+  </metainfo>
+</metadata>

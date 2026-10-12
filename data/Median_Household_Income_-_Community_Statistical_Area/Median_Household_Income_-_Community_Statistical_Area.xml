@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><MD_Metadata xmlns:gts="http://www.isotc211.org/2005/gts" xmlns:gco="http://www.isotc211.org/2005/gco" xmlns:xalan="http://xml.apache.org/xalan" xmlns:srv="http://www.isotc211.org/2005/srv" xmlns:gmx="http://www.isotc211.org/2005/gmx" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gml="http://www.opengis.net/gml" xmlns="http://www.isotc211.org/2005/gmd">
+    <fileIdentifier>
+        <gco:CharacterString>1609770136827r04525231051451861</gco:CharacterString>
+    </fileIdentifier>
+    <characterSet>
+        <MD_CharacterSetCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_CharacterSetCode" codeListValue="utf8" codeSpace="ISOTC211/19115">utf8</MD_CharacterSetCode>
+    </characterSet>
+    <hierarchyLevel>
+        <MD_ScopeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode" codeListValue="dataset" codeSpace="ISOTC211/19115">dataset</MD_ScopeCode>
+    </hierarchyLevel>
+    <hierarchyLevelName>
+        <gco:CharacterString>dataset</gco:CharacterString>
+    </hierarchyLevelName>
+    <contact>
+        <CI_ResponsibleParty>
+            <role>
+                <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact" codeSpace="ISOTC211/19115">pointOfContact</CI_RoleCode>
+            </role>
+        </CI_ResponsibleParty>
+    </contact>
+    <dateStamp>
+        <gco:Date>2021-01-04</gco:Date>
+    </dateStamp>
+    <metadataStandardName>
+        <gco:CharacterString>ISO 19139 Geographic Information - Metadata - Implementation Specification</gco:CharacterString>
+    </metadataStandardName>
+    <metadataStandardVersion>
+        <gco:CharacterString>2007</gco:CharacterString>
+    </metadataStandardVersion>
+    <identificationInfo>
+        <MD_DataIdentification>
+            <citation>
+                <CI_Citation>
+                    <title>
+                        <gco:CharacterString>Median Household Income</gco:CharacterString>
+                    </title>
+                    <date gco:nilReason="missing"/>
+                </CI_Citation>
+            </citation>
+            <abstract>
+                <gco:CharacterString>Median household income is the middle value of the incomes earned in the prior year by households in an area. Income and earnings are inflation-adjusted for the last year of the 5-year period. The median value is used as opposed to the average so that both extremely high and extremely low prices do not distort the total amount of income earned by households in an area. Source: American Community SurveyYears Available: 2006-2010, 2007-2011, 2008-2012, 2009-2013, 2010-2014, 2011-2015, 2012-2016, 2013-2017, 2014-2018, 2015-2019, 2016-2020, 2017-2021, 2018-2022, 2019-2023Please note: We do not recommend comparing overlapping years
+of data due to the nature of this dataset. For more information, please visit: https://www.census.gov/programs-surveys/acs/guidance/comparing-acs-data.html</gco:CharacterString>
+            </abstract>
+            <purpose>
+                <gco:CharacterString>Median household income is the middle value of the incomes earned in the prior year by households in an area. </gco:CharacterString>
+            </purpose>
+            <credit>
+                <gco:CharacterString>Baltimore Neighborhood Indicators Alliance - Jacob France Institute (bniajfi.org)</gco:CharacterString>
+            </credit>
+            <descriptiveKeywords>
+                <MD_Keywords>
+                    <keyword>
+                        <gco:CharacterString>census</gco:CharacterString>
+                    </keyword>
+                </MD_Keywords>
+            </descriptiveKeywords>
+            <language gco:nilReason="missing"/>
+            <characterSet>
+                <MD_CharacterSetCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_CharacterSetCode" codeListValue="utf8" codeSpace="ISOTC211/19115">utf8</MD_CharacterSetCode>
+            </characterSet>
+        </MD_DataIdentification>
+    </identificationInfo>
+</MD_Metadata>

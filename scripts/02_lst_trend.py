@@ -13,6 +13,7 @@ Outputs (float32 COG, DEFLATE, nodata -9999) and tables in data/processed/lst_tr
 Run: conda run -p .\\env python scripts\\02_lst_trend.py
 """
 import json
+import os
 import warnings
 from datetime import date
 from pathlib import Path
@@ -30,7 +31,9 @@ from scipy import stats
 ROOT = Path(__file__).resolve().parents[1]
 RAW = ROOT / "data/raw/landsat"
 NSA = ROOT / "data/vector/Neighborhood_Statistical_Area_(NSA)_Boundaries/Neighborhood_Statistical_Area_(NSA)_Boundaries.shp"
-OUT = ROOT / "data/processed/lst_trend"
+# Sensor set from env var LST_SENSORS (default Landsat 8 only), e.g. LST_SENSORS=LC08,LC09.
+SENSORS = tuple(os.environ.get("LST_SENSORS", "LC08").split(","))
+OUT = ROOT / "data/processed" / ("lst_trend" if SENSORS == ("LC08",) else "lst_trend_" + "_".join(SENSORS).lower())
 YEARS = np.arange(2013, 2026)
 QA_BITS = 0b111111   # fill, dilated cloud, cirrus, cloud, shadow, snow (as in the GEE script)
 MIN_CLEAR = 0.5      # variant B: min clear fraction of city pixels for a scene to be used
@@ -39,9 +42,9 @@ NODATA = -9999.0
 warnings.filterwarnings("ignore", "Mean of empty slice|All-NaN slice", RuntimeWarning)
 
 
-def load_scenes(city):
+def load_scenes(city, sensors=("LC08",)):
     recs, lst = [], []
-    for d in sorted(RAW.glob("LC08_*")):
+    for d in sorted(p for s in sensors for p in RAW.glob(f"{s}_*")):
         sid = d.name
         with rasterio.open(d / f"{sid}_ST_B10_subset.tif") as s:
             st = s.read(1)
@@ -56,7 +59,7 @@ def load_scenes(city):
         n_clear = np.isfinite(tc).sum()
         unc = stqa[city & clear]
         recs.append({
-            "scene_id": sid, "date": pd.Timestamp(sid[17:25]), "year": int(sid[17:21]),
+            "scene_id": sid, "sensor": sid[:4], "date": pd.Timestamp(sid[17:25]), "year": int(sid[17:21]),
             "clear_frac_city": n_clear / city.sum(),
             "lst_p05": np.nanpercentile(tc, 5) if n_clear else np.nan,
             "lst_median": np.nanmedian(tc) if n_clear else np.nan,
@@ -126,7 +129,7 @@ def main():
     nsa = gpd.read_file(NSA).to_crs(32618)
     city = geometry_mask(nsa.geometry, out_shape=shape, transform=tr, invert=True)
 
-    scenes, lst, profile = load_scenes(city)
+    scenes, lst, profile = load_scenes(city, SENSORS)
     scenes["used_B"] = scenes.clear_frac_city >= MIN_CLEAR
     scenes.to_csv(OUT / "scene_table.csv", index=False, float_format="%.3f")
     yrs = scenes.year.values

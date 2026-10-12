@@ -82,7 +82,7 @@ def main():
         tr, shape = s.transform, s.shape
     nsa = gpd.read_file(lst_mod.NSA).to_crs(32618)
     city = geometry_mask(nsa.geometry, out_shape=shape, transform=tr, invert=True)
-    scenes, lst, profile = lst_mod.load_scenes(city)
+    scenes, lst, profile = lst_mod.load_scenes(city, lst_mod.SENSORS)
     scenes["used_B"] = scenes.clear_frac_city >= MIN_CLEAR
 
     # --- weather at overpass
@@ -106,9 +106,10 @@ def main():
 
     # --- sensitivity b on variant-B scenes
     sb = scenes[scenes.used_B & scenes.tair_C.notna()].copy()
-    fit = smf.ols("lst_median ~ tair_C + year", data=sb).fit()
+    sensor_term = " + C(sensor)" if sb.sensor.nunique() > 1 else ""  # L8/L9 offset, if both present
+    fit = smf.ols("lst_median ~ tair_C + year" + sensor_term, data=sb).fit()
     b = fit.params["tair_C"]
-    fit_x = smf.ols("lst_median ~ tair_C + year + wind_ms + prcp_prev3d_mm", data=sb).fit()
+    fit_x = smf.ols("lst_median ~ tair_C + year + wind_ms + prcp_prev3d_mm" + sensor_term, data=sb).fit()
     print(fit.summary().tables[1])
     print("with wind/precip:\n", fit_x.summary().tables[1])
 

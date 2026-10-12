@@ -13,7 +13,8 @@ append-only and dated, so the history stays readable. Newest entries go at the b
 | Study area | Baltimore City, MD; Neighborhood Statistical Areas (NSAs) as reporting units | Rural reference ring: **open** |
 | Primary LST source | Landsat Collection 2 Level-2 surface temperature (`ST_B10` L8/9, `ST_B6` L5/7), WRS-2 path 15 / row 33 | Set |
 | Season | July–August | Set (default) |
-| Period of record | 2013–2025, Landsat 8 only (L9 from 2022 as a later sensitivity test) | Exploratory |
+| Period of record | 2013–2025, **Landsat 8 only for all analyses** (user decision 2026-10-11, after the L9 contrast check); L8 + L9 products kept as replication only | Set |
+| Sensor configuration | `LST_SENSORS=LC08,LC09` → `data/processed/lst_trend_lc08_lc09/`; default (L8) → `data/processed/lst_trend/`. Weather fit includes a sensor term; no L9 offset correction | Set |
 | Temporal aggregation | One summer-mean composite per year; per-pixel OLS slope (°C/yr) for trends | Set (default) |
 | Land cover | USGS Annual NLCD Collection 1.2 (1985–2025 available); Land Cover + Fractional Impervious, 2013 vs 2025 | Set |
 | Vegetation | NDVI from scaled surface reflectance, same season as LST | Set |
@@ -28,11 +29,15 @@ append-only and dated, so the history stays readable. Newest entries go at the b
 
 | Dataset | Source / ID | Version or dates | Location in repo |
 |---|---|---|---|
-| Landsat C2 L2 | USGS via Planetary Computer `landsat-c2-l2`; L8, p15/r33, T1, L2SP, Jul–Aug | 41 scenes 2013–2025 (1 skipped) | `data/raw/landsat/` |
+| Landsat C2 L2 | USGS via Planetary Computer `landsat-c2-l2`; L8 and L9, p15/r33, T1, L2SP, Jul–Aug | L8: 41 scenes 2013–2025 (1 skipped); L9: 15 scenes 2022–2025 | `data/raw/landsat/` |
 | Annual NLCD | USGS EROS, Collection 1.2, via ScienceBase (doi:10.5066/P94UXNTS); CONUS Albers on WGS 84, 30 m | LndCov, FctImp 2013 & 2025 | `data/raw/nlcd/` |
 | NSA boundaries | Baltimore City Open GIS Data (shapefile provided by user, EPSG:2248) | 279 NSAs, file dated 2026-06-28 | `data/vector/Neighborhood_Statistical_Area_(NSA)_Boundaries/` |
 | NSA boundaries, UTM | Derived: `scripts/00_prepare_nsa.py` (EPSG:2248 → 32618 via NAD83 to WGS 84 (24)) | — | `data/vector/nsa_boundaries_32618.gpkg` |
 | BWI weather | NOAA ISD hourly 72406093721 (2013–2025, FM-15 METAR: air temp, wind); GHCN-Daily USW00093721 (precip) | retrieved 2026-10-11 | `data/raw/noaa/` |
+| Median household income | BNIA Vital Signs by Community Statistical Area (55 CSAs; ACS 5-yr, nominal $); file provided by user, EPSG:2248 | 2006–10 … 2019–23 | `data/Median_Household_Income_-_Community_Statistical_Area/` |
+| Streams (hyper-resolution) | Chesapeake Bay Hyper-Resolution Hydrography, HUC8 02060003 streamLine (CC/UMBC, ScienceBase 679cfd13d34e89501cd2d6ed, pub. 2025-05-23), clipped to city | source imagery 2008–2021 | raw `data/raw/streams/`; city `data/vector/streams_cc_city.gpkg` |
+| Streams (NHD) | USGS NHD High Resolution HU8 02060003 NHDFlowline (pub. 2023-12-15), clipped to city | — | raw `data/raw/streams/`; city `data/vector/streams_nhd_city.gpkg` |
+| Terrain | USGS 3DEP 1/3 arc-second DEM tile n40w077 (Planetary Computer `3dep-seamless`, native-grid window); CC geomorphon 10 m, HUC8 02060003 (ScienceBase S3) | DEM source 2014 | `data/raw/terrain/` |
 | Chesapeake Conservancy LULC | 1 m, 56-class LULC 2024 Edition, Baltimore City (ScienceBase 68011bd8d4be0263cab0ff37); ESRI:102039 (NAD83 Albers) | 2013/14, 2017/18, 2021/22 | `data/raw/cc_lulc/` |
 
 ---
@@ -179,6 +184,68 @@ alternatives were, and why.
   on where impervious changed (r = 0.27 at 90 m); classification differences between CC
   editions/years can create apparent change.
 
+### 2026-10-11 — Q2 design: cover state vs LST trend on stable blocks
+- **Choice:** 90 m blocks with < 2 pp change in every CC cover group (2013/14 → 2021/22),
+  full CC coverage, < 10% water; cover state = 2013/14 fractions. Trends compared by
+  impervious and canopy deciles and by an ordered cover typology (canopy ≥ 50% → roofs ≥ 35%
+  → roads + other impervious ≥ 50% → turf ≥ 35% → herbaceous/shrub ≥ 35% → mixed). 95% CIs from
+  a spatial block bootstrap (1 km tiles, 1000 resamples). Per-type weather-adjusted trends
+  from scene medians: LST ~ T_air + year, and type gap ~ T_air + year.
+- **Why:** separates "did places with a given cover warm differently" (Q2) from cover-change
+  effects (Q3); typology thresholds chosen from the stable-block distributions.
+- **Note:** B and C1 differ by a per-scene constant, so between-type differences are nearly
+  the same in both; only the level differs.
+
+### 2026-10-11 — Landsat 9 used to replicate, not (yet) merged into the primary series
+- **Choice:** keep L8-only results as primary; use L9 (2022–2025) for (A) sensor agreement,
+  (B) an independent change test (late-period change from L8 vs from L9, each against a
+  disjoint set of L8 baseline years: odd vs even 2013–2021), and (C) trend variants
+  L8 + L9 and "swap" (L8 to 2021, L9 only from 2022).
+- **Why:** adding L9 doubles recent observations mid-series (a known source of bias in
+  trends); replication first establishes whether the sensors agree and which spatial
+  patterns are reproducible.
+- **No L9 offset correction applied:** estimated L9 − L8 offset +0.63 °C, 95% CI −1.3 to +2.6
+  (n = 28 scenes) — not distinguishable from zero; relative-LST results are immune to it.
+
+### 2026-10-11 — Landsat 8 + 9 adopted as the primary scene set (user decision)
+- **Choice:** variant B (≥ 50% clear, relative LST) and C1/C2 computed from L8 + L9; the
+  L8-only products are kept unchanged for comparison.
+- **Why:** the replication showed the sensors agree (no detectable offset; relative pattern
+  r = 0.97) and the key results reproduce; L9 fills 2022 and adds 8 usable scenes (28 vs 20).
+- **Consequences:** 12 years with data instead of 11; b refitted with a sensor term
+  (0.81, 95% CI 0.59–1.04). Mid-series change in observation density (L9 from 2022) remains a
+  caveat for trends. Downstream analyses (06, 07, 10, 11) still read the L8-only products
+  until rerun.
+
+### 2026-10-11 — Landsat 8 only for everything (user decision; supersedes L8 + 9 as primary)
+- **Choice:** all analyses (trend maps, NSA summaries, cover comparisons, city trend) use
+  Landsat 8 only. L8 + L9 products (`data/processed/lst_trend_lc08_lc09/`,
+  `data/processed/l9_replication/`) are kept as replication only and labelled as such in QGIS.
+- **Alternatives:** L8 primary for spatial work with L8 + L9 for the city trend; per-pixel
+  scene-level model with a sensor term (harmonization).
+- **Why:** L9 scenes show lower hot–cool contrast than L8 for the same date and air temperature
+  (−0.84 °C, p = 0.065), and adding them only at the end of the record produced artificial
+  hot/cool convergence across NSAs (trend vs mean relative LST: −0.44 with L9, −0.16 without).
+  A single consistent sensor avoids the issue.
+
+### 2026-10-11 — Income comparison at CSA level, not NSA
+- **Choice:** compare BNIA median household income (2019–2023 ACS) with LST metrics recomputed
+  for each of the 55 CSAs from the pixels (same series-trend method as the NSA summary).
+- **Alternatives:** assign CSA income to NSAs (279 points sharing 55 income values —
+  pseudo-replication; ~80 NSAs straddle CSA boundaries); ACS block groups reallocated to NSAs
+  via 2020 blocks (Census API now requires a key — not set up).
+- **Note:** median, not mean, household income; ACS margins of error are not in the BNIA file.
+
+### 2026-10-11 — Stream effect tested against terrain and surrounding cover
+- **Choice:** OLS of mean relative LST on 90 m blocks with distance-to-open-channel bins
+  (reference 450–1000 m), SEs clustered by 1 km tile, under three adjustments: own-block cover;
+  + terrain (elevation, slope, TPI 300 m / 1 km, solar illumination at overpass, geomorphon
+  valley / ridge shares); + surrounding canopy and impervious (3×3 and 7×7 blocks ≈ 270 / 630 m).
+- **Why:** stream valleys are low-lying and lie within large forested parks; park cooling and
+  the ~100 m thermal footprint extend beyond a block's own cover.
+- **Caveat:** surrounding-cover terms absorb both physical spillover (park cool islands) and
+  sensor blur; they cannot be separated here.
+
 ---
 
 ## 3. Process log
@@ -267,3 +334,120 @@ don't need an entry.
 - Impervious loss ≥ 5 pp by dominant replacement (median B trend; stable −0.030):
   → herbaceous/shrub −0.078 (n = 182), → canopy −0.044 (n = 54), → turf −0.025 (n = 164),
   → bare +0.027 (n = 72). Gains: from canopy +0.020, turf +0.023, herbaceous +0.071, bare +0.063.
+
+### 2026-10-11 — Q2 run: cover state vs LST trend (exploratory)
+- `scripts/11_q2_cover_state_trend.py` → `data/processed/cc_lulc/q2_*.csv`, preview PNG.
+  17,150 stable blocks, 273 tiles.
+- Median relative trend (B) by type, °C/yr [95% CI]: turf −0.007 [−0.020, 0.010], pavement
+  −0.023 [−0.040, −0.009], canopy −0.025 [−0.040, −0.011], mixed −0.034, herbaceous −0.035,
+  roof-dominated −0.064 [−0.085, −0.047]. C1 (absolute): turf +0.147, pavement +0.138,
+  canopy +0.114, roofs +0.092.
+- Impervious deciles non-monotonic: lowest trends in deciles 7–9 (67–90% impervious,
+  rowhouse-like), deciles 1 and 10 ≈ −0.015. OLS on fractions: small negative coefficients
+  significant on the full grid, not on the thinned grid (except roads, p = 0.035).
+- Scene-level sensitivity to air temperature rises with imperviousness (b: canopy 0.68 →
+  roofs 0.81 °C/°C; roof gap vs T_air +0.10, p = 0.09). Weather-adjusted per-type trends all
+  non-significant (18–20 scenes; CIs ≈ ±0.2–0.3 °C/yr); roof gap trend −0.066 (p = 0.21).
+
+### 2026-10-11 — Landsat 9 acquisition and replication run (exploratory)
+- `scripts/01_acquire_landsat.py landsat-9` (script now takes a platform argument and keeps
+  the other platform's manifest rows): 15 L9 scenes, 75 manifest rows, none skipped.
+  8 L9 scenes pass the ≥ 50% clear rule, including 2 in 2022 (no usable L8 2022).
+- `scripts/02_lst_trend.py`: `load_scenes(city, sensors=("LC08",))` — default unchanged.
+- `scripts/12_l9_replication.py` → `data/processed/l9_replication/`.
+- A: relative LST pattern 2022–25, L8 vs L9: r = 0.97 (mean |diff| 0.84 °C).
+- B: independent change maps, L8 vs L9: r = 0.19 (Spearman 0.13). Blocks with NLCD
+  impervious gain ≥ 20 pp: ΔL8 +1.9 °C, ΔL9 +1.2 °C vs stable −0.3 / +0.1 °C.
+- C: impervious-gain effect (°C/yr per 10 pp, gain ≥ 5 pp blocks): L8 0.100 ± 0.014;
+  L8 + L9 0.087 ± 0.013; swap 0.083 ± 0.013. Trend map r with L8-only: 0.83 (L8 + L9),
+  0.61 (swap). City C1 trend: L8 +0.13 ± 0.21 (11 yr); L8 + L9 +0.14 ± 0.22 (12 yr, p = 0.17);
+  swap +0.15 ± 0.22 (p = 0.16).
+
+### 2026-10-11 — Landsat 8 + 9 trend products (exploratory)
+- `scripts/02_lst_trend.py` / `04_lst_bwi_normalized.py` take the sensor set from
+  `LST_SENSORS`; run with `LC08,LC09` → `data/processed/lst_trend_lc08_lc09/`.
+- 56 scenes, 28 pass the ≥ 50% clear rule; 12 years (2014 still missing).
+- City (fixed 149,538 pixels): observed +0.23 °C/yr (p = 0.09) = climate +0.10 + sampling
+  +0.11 + surface +0.05 (p = 0.66); C1 +0.145 °C/yr (p = 0.17, SE 0.097).
+- Pixels: B relative median −0.007 °C/yr (11.4% p < 0.05: 4.5% warming, 6.9% cooling);
+  C1 median +0.155; C2 median +0.063.
+- QGIS group "Landsat 8 + 9 (2013–2025)"; replication layers moved into its subgroup.
+
+### 2026-10-11 — NSA trend summary; Landsat 9 contrast artifact found (exploratory)
+- `scripts/13_nsa_summary.py` → `data/processed/nsa/nsa_lst_<sensors>.gpkg/.csv` (279 NSAs; NSA-mean
+  annual series → OLS trend, 95% CI, p, BH q; cover and census context).
+- L8 + L9: 26 NSAs p < 0.05 for the relative trend, none at q < 0.10; C1 median +0.146 °C/yr.
+  Across NSAs the relative trend correlates with mean relative LST −0.44, impervious −0.47,
+  canopy +0.37 (hot neighbourhoods "converging"). L8 only: −0.16, −0.18, +0.06.
+- `scripts/14_scene_contrast_check.py`: per-scene contrast (≥ 80% impervious minus ≥ 70% canopy)
+  depends strongly on day of year (−0.041 °C/day, p < 0.001, r² 0.43) but has no year trend
+  (+0.015, p = 0.79, with controls); L9 scenes show ~0.84 °C lower contrast than L8 for the same
+  date and air temperature (p = 0.065). Mean day of year does not differ between periods.
+- **Interpretation:** most of the L8 + L9 hot/cool convergence comes from adding lower-contrast
+  L9 scenes at the end of the record, not from real change. Local change results (impervious
+  gain effect) are unaffected (replicated). Decision on the primary scene set reopened.
+
+### 2026-10-11 — NSA summary, Landsat 8 (primary)
+- `scripts/13_nsa_summary.py` (default sensors) → `data/processed/nsa/nsa_lst_lc08.gpkg/.csv`.
+- Relative trend: 27 of 279 NSAs at p < 0.05 (≈ 14 expected by chance), none at q < 0.10.
+  C1: median +0.120 °C/yr; 18 at p < 0.05, none at q < 0.10.
+- Across NSAs the relative trend is only weakly related to mean relative LST (−0.16),
+  impervious (−0.18), canopy (+0.06), CC impervious change (+0.15), NLCD impervious change
+  (+0.16), population density (−0.19).
+- QGIS: group "NSA summary: Landsat 8, 2013–2025" (relative trend, C1 trend, mean relative LST;
+  styles `styles/nsa_*.qml`); L8 + L9 group renamed "Replication only" and hidden.
+
+### 2026-10-11 — Income vs LST by CSA (exploratory, Landsat 8)
+- `scripts/15_csa_income_scatter.py` → `data/processed/csa/csa_lst_income_lc08.csv`,
+  `figures/scatter_income/income_vs_{rel_trend,c1_trend,mean_rel}.png`.
+- Median household income (2019–23) vs relative trend: Spearman +0.02 (p = 0.88); vs C1 trend
+  +0.00 (p = 0.98); vs mean relative LST −0.18 (p = 0.19). n = 55 CSAs.
+- Hot CSAs include both low-income west/east-side rowhouse areas and high-income waterfront
+  rowhouse areas (Canton, Highlandtown, Fells Point, Federal Hill); the coolest are
+  high-income northern (Roland Park, Guilford) and park-adjacent CSAs.
+
+### 2026-10-11 — Share of Black residents vs LST by NSA (exploratory, Landsat 8)
+- `scripts/16_nsa_race_scatter.py` → `data/processed/nsa/nsa_race_lst_lc08.csv`,
+  `figures/scatter_race/pct_black_vs_{mean_rel,rel_trend,c1_trend}.png`. 258 NSAs (≥ 100
+  residents); x = Blk_AfAm / Population (2020). Population-weighted exposure with 95% CI from a
+  spatial block bootstrap (2 km tiles of NSA centroids, 2000 resamples).
+- Mean relative LST: Spearman +0.08 (p = 0.18); exposure Black +0.52 °C vs white +0.62 °C,
+  difference −0.10 [−1.27, +1.09].
+- Relative trend: Spearman +0.13 (p = 0.04); exposure difference +0.020 °C/yr [−0.004, +0.044].
+- C1 trend: Spearman +0.19 (p = 0.002), Pearson +0.24; exposure difference +0.034 °C/yr
+  [−0.001, +0.075]. Naive p-values ignore spatial dependence; bootstrap CIs just include 0.
+
+### 2026-10-11 — Stream networks added (display; exploratory)
+- `scripts/17_acquire_streams.py`: CC streamLine.zip (30.3 MB, local) + metadata XML, NHD HU8
+  shapefile (12.8 MB, git); clipped to the NSA union in EPSG:32618.
+- City: CC 964 reaches, 243.6 km (157.6 km open channel; 86.0 km with ≥ 50% "connector", i.e.
+  no visible channel polygon — likely piped, culverted, under road, or through open water);
+  Strahler orders 1–6. NHD 233 flowlines, 175.0 km (StreamRiver 99.8, Coastline 47.3,
+  ArtificialPath 21.9, Connector 6.0 km); no underground-conduit features in the city.
+- Neither network maps the historically buried streams of the central city.
+- QGIS group "Streams" (styles `streams_cc_channel.qml`, `streams_nhd_named.qml`).
+
+### 2026-10-11 — Summer LST vs distance to streams (exploratory, Landsat 8)
+- `scripts/18_stream_distance_lst.py` → `data/processed/streams/stream_distance_*.csv`,
+  `figures/stream_distance/{lst_vs_dist_open,resid_vs_dist_open,resid_open_vs_hidden}.png`.
+  25,215 blocks of 90 m (< 10% water); distance from block centre to the nearest CC reach.
+  Cover-adjusted LST = residual of mean relative LST ~ CC 2021/22 cover fractions (r² 0.79).
+  Near (≤ 90 m) minus far (450–1000 m), 95% CI from 1 km tile bootstrap.
+- Open channel: raw −5.6 °C [−6.5, −4.8]; canopy +39 pp near streams; cover-adjusted
+  −1.17 °C [−1.41, −0.86], fading to ~0 by ~300 m. Same > 1 km from the harbour (−1.19 °C).
+- No visible channel (cnctR ≥ 0.5): raw −2.8 °C, cover-adjusted −0.49 °C [−0.79, −0.25].
+
+### 2026-10-11 — Terrain acquisition and stream vs terrain run (exploratory, Landsat 8)
+- `scripts/19_acquire_terrain.py`: 3DEP subset 13.1 MB (local), STAC JSON, geomorphon 10 m
+  10.4 MB (git; by-name ScienceBase URL 404, public S3 URL used).
+- `scripts/20_stream_terrain_lst.py` → `data/processed/streams/terrain_*.csv`,
+  `figures/stream_distance/{terrain_bins,stream_size}.png`. 24,948 blocks. Sun at overpass
+  (31 Jul 15:46 UTC): elevation 62.0°, azimuth 131.7°.
+- R²: cover 0.811; + terrain 0.822; + surroundings 0.905.
+- 0–90 m vs 450–1000 m: cover −1.38 °C [−1.68, −1.08]; + terrain −1.33 [−1.64, −1.02];
+  + surroundings −0.18 [−0.39, +0.03] (ns); 90–180 m: −1.16 → −1.09 → +0.05.
+- Terrain (M2): illumination +5.3 °C per unit cos(i) (sun-facing slopes warmer), slope
+  −0.09 °C/deg, elevation −0.010 °C/m, valley −0.0035 and ridge −0.0042 °C/pp; TPI ns.
+- Stream size (blocks < 180 m): by Strahler order, cover-adjusted means −0.67 (1) to −1.00 (4–6),
+  joint p = 0.02; after terrain p = 0.11; after surroundings p = 0.06, non-monotonic. By
+  channel width: p = 0.23 / 0.37 / 0.41.
