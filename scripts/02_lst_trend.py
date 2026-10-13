@@ -42,9 +42,10 @@ NODATA = -9999.0
 warnings.filterwarnings("ignore", "Mean of empty slice|All-NaN slice", RuntimeWarning)
 
 
-def load_scenes(city, sensors=("LC08",)):
+def load_scenes(city, sensors=("LC08",), months=(7, 8)):
     recs, lst = [], []
-    for d in sorted(p for s in sensors for p in RAW.glob(f"{s}_*")):
+    dirs = sorted(p for s in sensors for p in RAW.glob(f"{s}_*") if p.is_dir())
+    for d in [p for p in dirs if int(p.name[21:23]) in months]:  # scene month from ID (YYYYMMDD at 17:25)
         sid = d.name
         with rasterio.open(d / f"{sid}_ST_B10_subset.tif") as s:
             st = s.read(1)

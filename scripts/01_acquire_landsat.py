@@ -6,11 +6,12 @@ row 33, Tier 1, L2SP, July-August, 2013-2025 (Landsat 9 data begin late 2021).
 
 For each scene, the native-grid window covering the NSA boundaries (+450 m) is copied from
 the source COGs with values, dtype, no-data, and grid unchanged (no resampling):
-ST_B10 (`lwir11`), QA_PIXEL, ST_QA (`qa`). The full MTL.txt and the STAC item JSON are
+ST_B10 (`lwir11`), QA_PIXEL, ST_QA (`qa`), SR_B4 (`red`) and SR_B5 (`nir08`). The full MTL.txt and the STAC item JSON are
 also saved. Every file is appended to data/raw/MANIFEST.csv.
 
 Run: conda run -p .\\env python scripts\\01_acquire_landsat.py [landsat-8|landsat-9]
 Manifest rows and skipped-scene entries for the other platform are kept.
+--all-months: all months (default July-August only), for the year-round analysis.
 """
 import csv
 import hashlib
@@ -33,7 +34,7 @@ NSA = ROOT / "data/vector/Neighborhood_Statistical_Area_(NSA)_Boundaries/Neighbo
 OUT = ROOT / "data/raw/landsat"
 MANIFEST = ROOT / "data/raw/MANIFEST.csv"
 STAC = "https://planetarycomputer.microsoft.com/api/stac/v1"
-BANDS = {"lwir11": "ST_B10", "qa_pixel": "QA_PIXEL", "qa": "ST_QA"}
+BANDS = {"lwir11": "ST_B10", "qa_pixel": "QA_PIXEL", "qa": "ST_QA", "red": "SR_B4", "nir08": "SR_B5"}  # SR bands for NDVI
 BUFFER_M = 450
 LICENSE = "USGS public domain"
 
@@ -62,7 +63,7 @@ def copy_window(href, dst, bounds):
     tmp.replace(dst)
 
 
-def main(platform="landsat-8"):
+def main(platform="landsat-8", all_months=False):
     nsa = gpd.read_file(NSA).to_crs(32618)
     xmin, ymin, xmax, ymax = nsa.total_bounds
     # Snap outward to the Landsat grid (pixel edges at 15 m mod 30 m).
@@ -76,8 +77,8 @@ def main(platform="landsat-8"):
     query = {"platform": {"eq": platform}, "landsat:wrs_path": {"eq": "015"},
              "landsat:wrs_row": {"eq": "033"}, "landsat:collection_category": {"eq": "T1"}}
     items = [it for it in cat.search(collections=["landsat-c2-l2"], bbox=bbox_ll,
-                                     datetime="2013-07-01/2025-08-31", query=query).items()
-             if it.datetime.month in (7, 8) and "_L2SP_" in it.id]
+                                     datetime="2013-01-01/2025-12-31", query=query).items()
+             if (all_months or it.datetime.month in (7, 8)) and "_L2SP_" in it.id]
     items.sort(key=lambda it: it.datetime)
     print(f"{platform}: {len(items)} scenes")
 
@@ -126,7 +127,8 @@ def main(platform="landsat-8"):
             rows.append({"path": p.relative_to(ROOT).as_posix(), "source": "USGS via Microsoft Planetary Computer",
                          "dataset_id": f"landsat-c2-l2/{it.id}", "url_or_query": f"{url} ({note})",
                          "retrieved": date.today().isoformat(), "bytes": p.stat().st_size,
-                         "sha256": sha256(p), "license": LICENSE, "storage": "local"})
+                         "sha256": sha256(p), "license": LICENSE,
+                         "storage": "git" if p.suffix in (".txt", ".json") else "local"})  # metadata committed
         print(it.id, f"cloud={it.properties['eo:cloud_cover']:.0f}%")
 
     # Rewrite manifest: keep non-landsat rows, replace landsat rows.
@@ -154,4 +156,5 @@ def main(platform="landsat-8"):
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:2])
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    main(*args[:1], all_months="--all-months" in sys.argv)

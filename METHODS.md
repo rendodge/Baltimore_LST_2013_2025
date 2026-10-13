@@ -12,12 +12,12 @@ append-only and dated, so the history stays readable. Newest entries go at the b
 |---|---|---|
 | Study area | Baltimore City, MD; Neighborhood Statistical Areas (NSAs) as reporting units | Rural reference ring: **open** |
 | Primary LST source | Landsat Collection 2 Level-2 surface temperature (`ST_B10` L8/9, `ST_B6` L5/7), WRS-2 path 15 / row 33 | Set |
-| Season | July–August | Set (default) |
+| Season | July–August (primary); year-round analysis added (`scripts/24_allyear_trends.py`: all months, harmonic seasonal model + per-season trends) | Set |
 | Period of record | 2013–2025, **Landsat 8 only for all analyses** (user decision 2026-10-11, after the L9 contrast check); L8 + L9 products kept as replication only | Set |
 | Sensor configuration | `LST_SENSORS=LC08,LC09` → `data/processed/lst_trend_lc08_lc09/`; default (L8) → `data/processed/lst_trend/`. Weather fit includes a sensor term; no L9 offset correction | Set |
 | Temporal aggregation | One summer-mean composite per year; per-pixel OLS slope (°C/yr) for trends | Set (default) |
 | Land cover | USGS Annual NLCD Collection 1.2 (1985–2025 available); Land Cover + Fractional Impervious, 2013 vs 2025 | Set |
-| Vegetation | NDVI from scaled surface reflectance, same season as LST | Set |
+| Vegetation | NDVI from scaled SR_B4/SR_B5 (ρ = DN × 0.0000275 − 0.2), same QA mask, variant-B scenes and Jul–Aug composites as LST (`scripts/22_ndvi_trend.py`) | Set |
 | Analysis CRS | EPSG:32618 (WGS 84 / UTM 18N) | Set |
 | Cloud/quality masking | `QA_PIXEL` bits 0–5 (incl. cirrus, as in the original GEE script); water not masked; `ST_QA` reported, not thresholded | Threshold **open** |
 | Scene filter (variant B) | Scene used only if ≥ 50% of city pixels are clear | Exploratory |
@@ -29,7 +29,7 @@ append-only and dated, so the history stays readable. Newest entries go at the b
 
 | Dataset | Source / ID | Version or dates | Location in repo |
 |---|---|---|---|
-| Landsat C2 L2 | USGS via Planetary Computer `landsat-c2-l2`; L8 and L9, p15/r33, T1, L2SP, Jul–Aug | L8: 41 scenes 2013–2025 (1 skipped); L9: 15 scenes 2022–2025 | `data/raw/landsat/` |
+| Landsat C2 L2 | USGS via Planetary Computer `landsat-c2-l2`; L8 and L9, p15/r33, T1, L2SP | L8 all months: 224 scenes Apr 2013–Dec 2025 (1 skipped; 41 in Jul–Aug); L9 Jul–Aug: 15 scenes 2022–2025 | `data/raw/landsat/` |
 | Annual NLCD | USGS EROS, Collection 1.2, via ScienceBase (doi:10.5066/P94UXNTS); CONUS Albers on WGS 84, 30 m | LndCov, FctImp 2013 & 2025 | `data/raw/nlcd/` |
 | NSA boundaries | Baltimore City Open GIS Data (shapefile provided by user, EPSG:2248) | 279 NSAs, file dated 2026-06-28 | `data/vector/Neighborhood_Statistical_Area_(NSA)_Boundaries/` |
 | NSA boundaries, UTM | Derived: `scripts/00_prepare_nsa.py` (EPSG:2248 → 32618 via NAD83 to WGS 84 (24)) | — | `data/vector/nsa_boundaries_32618.gpkg` |
@@ -38,6 +38,7 @@ append-only and dated, so the history stays readable. Newest entries go at the b
 | Streams (hyper-resolution) | Chesapeake Bay Hyper-Resolution Hydrography, HUC8 02060003 streamLine (CC/UMBC, ScienceBase 679cfd13d34e89501cd2d6ed, pub. 2025-05-23), clipped to city | source imagery 2008–2021 | raw `data/raw/streams/`; city `data/vector/streams_cc_city.gpkg` |
 | Streams (NHD) | USGS NHD High Resolution HU8 02060003 NHDFlowline (pub. 2023-12-15), clipped to city | — | raw `data/raw/streams/`; city `data/vector/streams_nhd_city.gpkg` |
 | Terrain | USGS 3DEP 1/3 arc-second DEM tile n40w077 (Planetary Computer `3dep-seamless`, native-grid window); CC geomorphon 10 m, HUC8 02060003 (ScienceBase S3) | DEM source 2014 | `data/raw/terrain/` |
+| NAIP aerial imagery | USDA NAIP via Planetary Computer (`naip`), clips around 7 candidate NSAs | 2013, 2015, 2017 (1 m), 2018 (0.6 m, leaf-off), 2021 (0.6 m), 2023 (read at 0.6 m from 0.3 m) | `data/raw/naip/` (local) |
 | Chesapeake Conservancy LULC | 1 m, 56-class LULC 2024 Edition, Baltimore City (ScienceBase 68011bd8d4be0263cab0ff37); ESRI:102039 (NAD83 Albers) | 2013/14, 2017/18, 2021/22 | `data/raw/cc_lulc/` |
 
 ---
@@ -246,6 +247,68 @@ alternatives were, and why.
 - **Caveat:** surrounding-cover terms absorb both physical spillover (park cool islands) and
   sensor blur; they cannot be separated here.
 
+### 2026-10-11 — Robustness to individual scenes: haze flag and leave-one-scene-out
+- **Choice:** flag scenes whose thermal or NDVI contrast is ≤ −2 SD below the day-of-year
+  expectation; recompute key results without them, and run a leave-one-scene-out jackknife
+  over the 20 variant-B scenes. Results are kept with all scenes; the jackknife range is
+  reported alongside each headline number.
+- **Why:** each year rests on 1–3 scenes, so single scenes (haze, weather) can drive trends.
+
+### 2026-10-12 — Year-round trends: harmonic seasonal model (user choices)
+- **Choice:** all Landsat 8 months, scenes ≥ 50% clear (101 scenes: DJF 16, MAM 29, JJA 24,
+  SON 32). Per-pixel and per-NSA harmonic regression (trend + annual + semi-annual terms) on
+  relative LST and on BWI-normalized LST with season-specific LST–air sensitivity (C1, C2);
+  per-season composite trends; city trends from scene medians with season-year-clustered SEs.
+  Significance also checked with a stricter test (de-seasonalized annual means, one value per
+  season-year, OLS), because scene-level and 13–14-cluster tests are optimistic.
+- **Alternatives:** simple annual means (biased by the seasonal mix of clear scenes);
+  per-season composites only (winter has no clear scene in 4 years).
+- **Safeguard:** `load_scenes()` now defaults to months (7, 8), so summer analyses are
+  unchanged by the all-month download (verified: 41 scenes, 20 used).
+
+### 2026-10-12 — Riparian buffer width definition
+- **Choice:** at points every 150 m on open CC channels, continuous forested buffer width = outer
+  edge of the last 1 m-derived distance band (0–10, 10–20, 20–30, 30–50, 50–75, 75–100, 100–150,
+  150–200, 200–300 m) such that every band from the channel outward has ≥ 50% canopy (both banks
+  combined; water excluded). Outcomes: Jul–Aug mean relative LST ≤ 45 m from the channel and
+  100–200 m away; control: impervious share 300–600 m from the point; SEs clustered by 1 km tile.
+- **Caveat:** thermal data are acquired at ~100 m, so differences between narrow buffers
+  (< ~50–100 m total) are only partly resolvable; the detected threshold is partly set by the sensor.
+
+### 2026-10-12 — Step detection on year-round relative LST
+- **Choice:** per 90 m block and per NSA, de-seasonalized (harmonic part removed) annual means of
+  relative LST (13 years, ≥ 2 scenes/yr, ≥ 11 years); single step at 2015–2023 (≥ 2 years each
+  side); sup-F calibrated by 20,000 white-noise simulations (5%); classed as a step only if it
+  also fits better than a linear trend.
+- **Caveat:** the white-noise calibration ignores spatially shared year effects; citywide step
+  frequency (23%) and a 2018 cluster show it is too liberal at block level. Block step years are
+  leads to verify, not dates of events.
+
+### 2026-10-12 — CORRECTION: buffer width is a per-side distance
+- The 2026-10-12 buffer-width entries described the width as "total across both banks". The
+  distance bands were measured from the channel with both banks pooled, so the width is a
+  **per-side** distance (corridor total ≈ 2×). Corrected reading: significant corridor cooling
+  from 50–100 m per side (≈ 100–200 m total corridor); hinge ≈ 70 m per side. Figure and script
+  labels fixed; per-bank widths are measured explicitly in the deep dive (`scripts/29`–`30`).
+
+### 2026-10-12 — ECOSTRESS added as a secondary thermal source (buffer deep dive)
+- **Choice:** ECO_L2T_LSTE v002 (70 m, tile 18SUJ), June–August 2018–2025, all overpass times;
+  pixels kept where cloud == 0, QC mandatory bits ≤ 1, 250–350 K; scenes ≥ 50% city clear; relative
+  LST (pixel − scene city median); local-time bins (EDT). Used only to test time of day and finer
+  resolution for the buffer question; Landsat 8 stays primary.
+- **Alternatives:** Landsat only (one overpass ≈ 10:40 local, 100 m); MODIS (1 km, too coarse).
+- **Caveats:** different period (2018–25) and months (Jun–Aug vs Jul–Aug); ECOSTRESS geolocation
+  error (tens of metres) and variable view angle blur narrow corridors; uneven bin sizes (20–43 scenes).
+
+### 2026-10-12 — Interpreting the buffer-width "threshold" with a sensor blur model
+- **Choice:** a 1-D cross-section simulation (box footprint + Gaussian blur, distributed grid)
+  gives the fraction of a true corridor anomaly each sensor records versus buffer width; the
+  apparent threshold is compared with this attenuation curve before being read as physical.
+- **Consequence:** the observed fall-off (≈ 24/57/87% of plateau cooling at 10–30/30–50/50–100 m
+  per side) is similar to Landsat's expected capture (15/42/64/84/95% at 10/30/50/75/100 m), so the
+  hinge (~60 m per side) cannot be claimed as a physical minimum width. Claim: cooling scales with
+  forested width up to ~100 m per side; no evidence of a benefit beyond that.
+
 ---
 
 ## 3. Process log
@@ -451,3 +514,149 @@ don't need an entry.
 - Stream size (blocks < 180 m): by Strahler order, cover-adjusted means −0.67 (1) to −1.00 (4–6),
   joint p = 0.02; after terrain p = 0.11; after surroundings p = 0.06, non-monotonic. By
   channel width: p = 0.23 / 0.37 / 0.41.
+
+### 2026-10-11 — Named stream corridor profiles (exploratory, Landsat 8)
+- `scripts/21_stream_corridor_profiles.py` → `data/processed/streams/corridor_{profiles,summary}.csv`,
+  `figures/stream_distance/corridor_profiles.png`. NHD flowlines by name, points every 90 m,
+  135 m-radius corridors.
+- Corridor mean relative LST: Gwynns Falls −6.3 °C (coolest; upper third −9.3, lower third −2.6),
+  Herring Run −5.9, Stony Run −4.9, Jones Falls −1.1 (lower third +2.6). Across all points,
+  LST vs canopy r = −0.91, vs impervious r = +0.94.
+- Trends (sampled from the trend rasters): C1 Gwynns +0.20 °C/yr (upper third +0.26) vs Herring
+  +0.08, Jones +0.03, Stony −0.05. Upper-Gwynns NSAs (Dickeyville, Franklintown, Wakefield,
+  Hunting Ridge, Gwynns Falls/Leakin Park) C1 +0.15 to +0.33 (p 0.002–0.03 each; none at
+  q < 0.10); relative trends +0.04 to +0.07 vs NSA median −0.04.
+- CC canopy change in corridors small: Gwynns middle third −3.3 pp (largest), upper −0.4 pp.
+
+### 2026-10-11 — NDVI trend test of the forest-condition hypothesis (exploratory, Landsat 8)
+- `scripts/01_acquire_landsat.py` now also fetches SR_B4 and SR_B5 (82 new subsets for the 41 L8
+  scenes; manifest storage for MTL/STAC set to git by the script).
+- `scripts/22_ndvi_trend.py` → `data/processed/ndvi/` (annual, mean, slope, p rasters;
+  `nsa_ndvi_trend.csv`, `stable_forest_blocks.csv`, `corridor_ndvi_trend.csv`),
+  `figures/ndvi/{forest_nsa,stable_forest}_ndvi_vs_lst_trend.png`. 20 scenes, 11 years.
+- City median summer NDVI 0.49; median trend −0.0013 /yr.
+- Forested NSAs (canopy ≥ 55%, n = 15): upper-Gwynns NSAs mean NDVI trend −0.0021 /yr vs other
+  −0.0034 /yr (Mann–Whitney p = 0.16); Leakin Park ≈ 0. NDVI trend vs C1 trend across forested
+  NSAs: Spearman −0.08 (p = 0.77). Largest NDVI declines: Herring Run Park (−0.0056), Original
+  Northwood, Dickeyville.
+- Stable forest blocks (≥ 70% canopy both periods, n = 2,093): C1 trend rises with NDVI trend,
+  +0.085 °C/yr per +0.01 NDVI/yr [+0.045, +0.124] (tile-clustered) — opposite in sign to the
+  browning → warming hypothesis. Upper-Gwynns stable forest: NDVI trend −0.0009 vs −0.0028
+  elsewhere; C1 +0.20 vs +0.10.
+- **Interpretation:** no evidence that loss of greenness explains the upper Gwynns warming. NDVI
+  saturates in dense canopy (Leakin Park mean 0.82), so a moisture-sensitive index (NDMI, SWIR1)
+  would be a stronger test. The positive NDVI–LST trend association in forest suggests a shared
+  scene/pixel-level factor (e.g. residual haze or cloud-edge effects lowering both).
+
+### 2026-10-11 — Haze sensitivity and jackknife (exploratory, Landsat 8)
+- `scripts/23_haze_sensitivity.py --jackknife` → `data/processed/haze/{scene_contrast,sensitivity,
+  jackknife,jackknife_summary}.csv`. Flagged: LC08 2024-08-25 only (NDVI contrast z = −2.23;
+  2021-07-16 z = −1.56 not flagged).
+- Without 2024-08-25: city C1 +0.13 → +0.17 °C/yr; NSAs at p < 0.05 28 → 12; trend-vs-heat ρ
+  −0.14 → +0.16; roof − turf −0.057 → −0.029; gain effect 0.100 → 0.098; forest NDVI −0.0025 →
+  −0.0012 /yr (p 0.48).
+- Jackknife ranges (all 20 drops): gain effect +0.096 to +0.110 per 10 pp; upper-Gwynns relative gap
+  +0.068 to +0.117 °C/yr (20/20 positive); race exposure difference (rel) +0.008 to +0.034,
+  (C1) +0.014 to +0.048 (20/20 positive); roof − turf −0.105 to −0.022 (20/20 negative); city C1
+  +0.04 to +0.25 (most influential: 2023-07-06, 2023-08-23); NSAs at p < 0.05: 12–34;
+  trend-vs-heat ρ −0.54 to +0.16; forest NDVI trend never significant (p ≥ 0.13).
+
+### 2026-10-12 — Year-round Landsat 8 trend run (exploratory)
+- `scripts/01_acquire_landsat.py landsat-8 --all-months`: 224 scenes (1,568 manifest rows).
+- `scripts/24_allyear_trends.py` → `data/processed/lst_allyear/` (harmonic and seasonal trend
+  rasters, seasonal mean relative LST, `city_trends.csv`, `season_comparison.csv`,
+  `nsa_lst_allyear_lc08.gpkg/.csv`, `paving_by_season.csv`), `figures/allyear/*.png`.
+- LST–air sensitivity b: DJF 0.85, MAM 0.95, JJA 0.81, SON 1.23.
+- City (scene medians): observed year-round +0.25 °C/yr [0.09, 0.42]; C1 +0.19 [−0.11, 0.48]
+  (leave-one-year-out +0.07 to +0.25); C2 +0.01 [−0.23, 0.26]. C1 by season: DJF +0.21
+  (p = 0.05), MAM +0.12, JJA +0.18 [0.09, 0.27], SON −0.10. C2 ≤ 0.07 in every season.
+- Pixels: relative trend 25% p < 0.05 by the strict annual test (8.9% warming, 16.1% cooling);
+  C1 0.7%, C2 0.5%.
+- NSA relative trend: 24 NSAs at q < 0.10 by the strict test (64 by the scene-level test);
+  C1 none. Rank correlation with Jul–Aug NSA results: trend 0.75, mean 0.99. Across NSAs,
+  relative trend vs mean relative LST ρ = −0.11 (p = 0.08); scene hot–cool contrast shows no
+  decline (+0.018 °C/yr, p = 0.37), so not a contrast artifact.
+- Heat pattern by season: hot–cool contrast DJF 1.9, MAM 5.5, JJA 9.5, SON 4.5 °C; cover r²
+  0.44 / 0.70 / 0.79 / 0.71; roofs +0.12 / +0.67 / +1.04 / +0.38 and canopy −0.22 / −0.31 /
+  −0.50 / −0.37 °C per 10 pp. Seasonal mean maps correlate 0.79–0.97.
+- Paving effect (relative trend per 10 pp NLCD impervious gain): year-round +0.054
+  [0.036, 0.071]; DJF 0.000; MAM +0.051; JJA +0.099; SON +0.031.
+
+### 2026-10-12 — BWI long-record trends and acceleration test (context for LST rates)
+- `scripts/25_bwi_long_record.py` (GHCN-D USW00093721). Jul–Aug mean Tmax trend (°C/decade):
+  1940–2025 +0.14, 1970–2025 +0.24, 1990–2025 +0.33, 2000–2025 +0.84, 2013–2025 +1.56; annual Tmax
+  2013–2025 +1.68 is the largest of 74 13-year windows since 1940 (Jul–Aug 72/74). 13-year window
+  trends vary widely (e.g. −0.5 to −0.6 for windows ending 2017–2018).
+- Hinge at 2000 (1970–2025, HAC SEs): slope increase annual Tmax +0.48 °C/decade (p = 0.025),
+  annual Tmin +0.78 (p < 0.001), Jul–Aug Tmax +0.44 (p = 0.18); quadratic term p = 0.019 /
+  < 0.001 / 0.26.
+- **Interpretation:** warming at BWI has accelerated since ~2000 (clearly for annual Tmax/Tmin,
+  suggestively for summer Tmax), but the 2013–2025 13-yr rate also reflects interannual
+  variability (cool start, record-warm 2024–2025) and overstates the underlying rate.
+- 2013–2025 vs 2000–2012 (same script; slope difference, HAC SEs): Jul–Aug Tmax +2.32 → +1.56
+  °C/decade, difference −0.76 [−2.69, +1.17] (p = 0.44); annual Tmax +1.16 → +1.68, +0.52
+  [−0.85, +1.89] (p = 0.46); annual Tmin +1.33 → +1.20, −0.13 (p = 0.78). Mean level 2013–2025
+  is +0.56 to +0.70 °C above 2000–2012. No evidence the last 13 years warmed faster than the
+  previous 13; the acceleration is relative to the late 20th century.
+
+### 2026-10-12 — Buffer width vs summer LST (exploratory, Landsat 8)
+- `scripts/26_buffer_width.py` → `data/processed/streams/buffer_width_{points,model,hinge}.csv`,
+  `figures/stream_distance/buffer_width.png`. 1,042 points on 728 open reaches; 762 with full
+  1 m coverage (city-edge windows dropped). Width classes: < 10 m 28, 10–30 167, 30–50 91,
+  50–100 169, 100–200 131, ≥ 200 176.
+- Corridor LST vs < 10 m (controlling context impervious): 10–30 m +0.10 °C (ns); 30–50 m −0.97
+  [−2.44, +0.50]; 50–100 m −2.89 [−4.30, −1.47]; 100–200 m −3.61 [−5.04, −2.18]; ≥ 200 m −3.48
+  [−4.86, −2.10]. Hinge: −0.64 °C per 10 m up to ~70 m total width, then flat.
+- Neighbourhood 100–200 m from channel: 50–100 m −1.01 [−1.91, −0.12]; 100–200 m −1.64; ≥ 200 m
+  −3.47 [−4.39, −2.55] (keeps increasing with width).
+
+### 2026-10-12 — Step detection run (exploratory, Landsat 8 all months)
+- `scripts/27_step_detection.py` → `data/processed/steps/{block_steps,nsa_steps}.csv`,
+  `step_year_90m.tif`, `step_C_90m.tif`, `figures/steps/{nsa24_step_series,nsa24_step_years}.png`.
+- 25,547 blocks; step 23.1%, trend-like 3.0%, no change 74.0% (sup-F 5% critical 10.48).
+  Block step share: 24 significant NSAs median 31% vs 21% elsewhere; NSA-level steps 9/24 vs 40/249.
+- Citywide 2018 cluster: 1,201 cooling and 473 warming step blocks (≈ 3–4× other years), across
+  all heat quintiles; 2018 warming steps are turf-rich (median turf 24% vs 10% in no-change blocks),
+  cooling steps have more canopy and roofs → a land-cover-type-dependent shift after 2018
+  (plausibly drier late summers browning turf), not redevelopment.
+- Distinct NSA-level steps: Perkins 2023 −1.60 °C (81% of blocks step, 13 cooling); McElderry Park
+  2016 −1.11 (73%); Biddle Street 2016 −0.64; Broadway East 2019 −0.57; Middle Branch/Reedbird
+  Parks 2021 −0.49; Cherry Hill 2021 −0.45; Shipley Hill 2018 −0.44; Darley Park 2019 −0.41;
+  Orchard Ridge 2017 +0.53. Other significant-trend NSAs (e.g. Ramblewood, Midtown-Edmondson,
+  Saint Paul) look gradual rather than stepwise.
+
+### 2026-10-12 — NAIP visual verification of LST steps (exploratory)
+- `scripts/28_acquire_naip.py` → 42 clips (7 NSAs × 6 years) in `data/raw/naip/` (manifest, local),
+  strips in `figures/naip/`, QGIS group "NAIP verification". Visual reads at thumbnail scale
+  (to be confirmed at full resolution):
+  - Perkins (step 2023, −1.6 °C): public-housing campus unchanged 2013–2021; 2023 shows the northern
+    half cleared to a bright construction site with a large new white-roofed building — timing
+    matches; cooling direction is plausible from brighter fill/roofs but not established.
+  - Orchard Ridge (warming step 2017): a new red running track/athletic field and expanded
+    construction/cleared ground appear between 2015 and 2017 — timing and direction consistent.
+  - Middle Branch/Reedbird Parks (step 2021): park meadows look denser/greener by 2021–2023;
+    a construction pad appears on the east edge in 2021.
+  - Cherry Hill (step 2021): same 2021 construction pad and greener park edges; no single obvious cause.
+  - Broadway East (step 2019): gradual greening of vacant lots and street trees 2017–2023.
+  - Biddle Street (2016) and McElderry Park (2016): no clear change visible at thumbnail scale.
+
+### 2026-10-12 — Buffer-width deep dive (exploratory, Landsat 8 + ECOSTRESS)
+- `scripts/29_buffer_points.py` → `data/processed/streams/buffer_points_v2.csv` (854 points, 150 m
+  spacing on open CC channels; per-bank 1 m canopy bands 2013/2021, continuity, context rings,
+  terrain, order, harbour distance, population density, cross-stream LST profiles).
+- `scripts/30_buffer_analysis.py` → `deepdive_*.csv`, `deepdive_priority_points.gpkg`,
+  `figures/buffer_deepdive/{threshold_and_seasons,robustness,cooling_distance}.png`.
+  Per-side width, ref ≥ 200 m, Jul–Aug corridor relative LST: 10–30 m +1.5 to +2.5 °C, 30–50 m
+  +0.9 to +1.5, 50–100 m +0.3 to +0.9 (significant with tile FE, 500 m FE, within-reach FE,
+  continuity), 100–200 m ≈ 0. Hinge 60 m (tile bootstrap 95% CI 40–110), −0.52 °C per 10 m below.
+  Continuity −0.61 °C per +10 pp. Both banks matter. Seasonal gradient JJA > MAM > SON > DJF
+  (<10 m: 3.08 / 2.11 / 1.70 / 0.78). Cooling extends 120 m (<10) to 390 m (≥ 200) from channel.
+  Buffer canopy gain 2013→2021 → relative trend −0.023 to −0.031 °C/yr per 10 pp (tile FE, p < 0.01).
+- `scripts/31_acquire_ecostress.py` → 470/473 granules (3 failed, HTTP 502) in `data/raw/ecostress/`.
+- `scripts/32_ecostress_buffer.py` → `data/processed/ecostress/{rel_mean_<bin>.tif,scenes.csv,
+  buffer_by_time.csv}`, `figures/buffer_deepdive/ecostress_time_of_day.png`. 170 scenes used
+  (night 43, morning 20, midday 42, afternoon 39, evening 26). Corridor 10–30 m vs ≥ 200 m:
+  night +0.10 (p 0.05), morning +0.54, midday +1.39, afternoon +1.26, evening +0.36 °C; 50–100 m
+  midday +0.70 (p < 0.001). Neighbourhood (90–210 m) shows a similar gradient by day.
+- `scripts/33_detection_limit.py` → `detection_limit.csv/png` (A = 2.99 °C; threshold 0.58 °C;
+  minimum detectable width ≈ 15 m per side for both sensors).
