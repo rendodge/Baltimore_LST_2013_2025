@@ -309,6 +309,29 @@ alternatives were, and why.
   hinge (~60 m per side) cannot be claimed as a physical minimum width. Claim: cooling scales with
   forested width up to ~100 m per side; no evidence of a benefit beyond that.
 
+### 2026-10-12 — Canopy height source: Meta 1 m model, not 3DEP lidar rasters
+- **Choice (user):** Meta / WRI global 1 m canopy height v1 (Tolan et al. 2024; leaf-on imagery, mostly
+  2018–2020, model estimate) for riparian tree height.
+- **Alternatives:** 3DEP 2014 lidar DSM/DTM rasters on Planetary Computer (tested, rejected: IDW of all
+  returns in a leaf-off flight gives 99th-percentile heights of 9–13 m in mature forest, no vegetation
+  classes); 3DEP point-cloud max-return CHM (true lidar, needs laspy/lazrs; not chosen).
+- **Caveats:** modelled heights (~3 m typical error) are compressed for tall forest (median 15 m in
+  ≥ 200 m buffers vs ~25–35 m expected), so per-metre coefficients are likely overstated in magnitude;
+  agreement with CC canopy: 83% of canopy pixels ≥ 3 m, 7% of other land ≥ 5 m.
+
+### 2026-10-13 — Buffer width effect reinterpreted as mostly local cover (edge tests)
+- **Finding that changes interpretation:** holding the 0–60 m corridor's own cover fixed (CC 30 m canopy,
+  impervious, turf, water fractions), the width-class penalty falls from +1.3 to +3.0 °C to +0.1 to +0.3 °C
+  (significant only for 50–100 m, +0.32). In the 90–210 m band, holding its own cover fixed cuts the penalty
+  from +0.8 to +2.1 °C to +0.2 to +0.5 °C; ≥ 100 m beyond the forest edge no width effect is detectable.
+- **Consequence:** the buffer-width result is mainly "surfaces are cooler where trees are"; the extra
+  cooling a wider forest gives to land outside itself is ≲ 0.3 °C (and could partly be thermal blur). The
+  profile-based "cooling extent" and the residents-in-cooled-zone estimate overstate spillover and must not
+  be presented as cooling delivered to neighbourhoods.
+- **Unchanged:** seasonal and time-of-day patterns, canopy-change trend test, height effect (fixed width).
+- **Prompted by:** Kail et al. (2021, Hydrol. Process. 35:e14008), whose water-temperature study shows that
+  a 10 m bank buffer does most of the in-stream shading; our LST data cannot observe stream water.
+
 ---
 
 ## 3. Process log
@@ -660,3 +683,32 @@ don't need an entry.
   midday +0.70 (p < 0.001). Neighbourhood (90–210 m) shows a similar gradient by day.
 - `scripts/33_detection_limit.py` → `detection_limit.csv/png` (A = 2.99 °C; threshold 0.58 °C;
   minimum detectable width ≈ 15 m per side for both sensors).
+
+### 2026-10-12 — Riparian tree height vs corridor LST (exploratory, Landsat 8)
+- `scripts/34_acquire_canopy_height.py` → 4 tile windows in `data/raw/canopy_height/` (42 MB, manifest, local).
+- `scripts/35_canopy_height_buffer.py` → `data/processed/canopy_height/{meta_chm_mosaic_3857.tif,
+  chm_mean_30m.tif, buffer_height.csv, height_models.csv}`, `figures/buffer_deepdive/canopy_height.png`.
+- Mean buffer canopy height 12.1 m (IQR 10.0–14.1); rises with width (median 8.4 m at 10–30 m to
+  15.0 m at ≥ 200 m per side; r = 0.58).
+- H1 (w ≥ 30 m per side, n = 650): −1.04 °C per +5 m at fixed width class (95% CI −1.33 to −0.75;
+  1 km tile FE −0.80). Seasonal: JJA −1.13, MAM −0.72, SON −0.61, DJF −0.26.
+- H2 (n = 854): canopy share + canopy height (AIC 2756) beats share alone (2777) and volume alone
+  (2849); with both: −0.68 °C per +10 pp canopy, −0.58 °C per +5 m height.
+- H3: tall buffers (≥ 11.9 m) cooler by 1.2 °C within the ≥ 200 m class; width × tall interactions
+  mostly n.s. (50–100 m: +0.64, p 0.04).
+
+### 2026-10-13 — Buffer edge and directional tests (exploratory, Landsat 8)
+- `scripts/36_buffer_edge_tests.py` → `data/processed/streams/{edge_tests_points.csv,edge_tests_models.csv}`,
+  `figures/buffer_deepdive/edge_tests.png`. 854 points; per-point 30 m-bin profiles of LST and CC 2021/22
+  cover fractions reproduce script 29 (bin-0 r = 1.000).
+- Test 1 (composition-controlled; M2 controls, tile-clustered SEs):
+  1d corridor 0–60 m: <10 +0.16, 10–30 +0.10, 30–50 +0.30 (p 0.07), 50–100 +0.32 (p 0.007), 100–200 0.00 °C
+  (vs +2.99 / +2.27 / +1.28 / +0.41 / −0.17 without composition).
+  1a band 90–210 m: +0.46 / +0.18 / +0.21 / +0.24 / +0.19 °C (vs +2.05 / +1.28 / +1.33 / +1.09 / +0.78).
+  1c band 150–300 m, w ≤ 50 m (n = 420): +0.03 °C per +10 m width (n.s.).
+  1b edge+90–210 m: not identifiable (band distance ≈ determined by width); simulated Landsat blur leakage
+  into that band ≈ 0.1% of the forest anomaly.
+- Test 2 (network topology from linkNum/dlinkNum; 363 points with ≥ 175 m of network both ways; canopy
+  within 50 m of the network 150–500 m away): corridor Jul–Aug upstream −0.13 (p 0.06), downstream −0.30 °C
+  per +10 pp (p < 0.001), up − down = +0.17 (p 0.05); 90–210 m: both ≈ 0; winter: up −0.01, down −0.08
+  (p 0.001). No upstream dominance → no detectable water-driven (advected) component.
